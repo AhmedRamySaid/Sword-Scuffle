@@ -244,7 +244,7 @@ namespace UI_Components
 
             // Background image with rounded look
             Image fieldImage = usernameField.AddComponent<Image>();
-            fieldImage.color = new Color(0.15f, 0.2f, 0.28f, 0.95f);
+            fieldImage.color = new Color(0.27f, 0.23f, 0.45f, 0.9f);
             fieldImage.raycastTarget = true;
 
             // Add border
@@ -287,7 +287,7 @@ namespace UI_Components
             TextMeshProUGUI placeholderText = placeholder.AddComponent<TextMeshProUGUI>();
             placeholderText.text = "Enter Username...";
             placeholderText.fontSize = 18;
-            placeholderText.color = new Color(0.5f, 0.6f, 0.7f, 0.6f);
+            placeholderText.color = new Color(1f, 1f, 1f, 0.8f);
             placeholderText.alignment = TextAlignmentOptions.Left;
             placeholderText.fontStyle = FontStyles.Italic;
 
