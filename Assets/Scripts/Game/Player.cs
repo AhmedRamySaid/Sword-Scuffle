@@ -2,10 +2,12 @@
 
 public class Player : MonoBehaviour
 {
-    [Header("Movement Settings")]
-    [SerializeField] private float mSpeed = 10.0f;
+    [Header("Movement Settings")] [SerializeField]
+    private float mSpeed = 10.0f;
+
     [SerializeField] private float mJumpForce = 10.0f;
     [SerializeField] private float mRollForce = 25.0f;
+    [SerializeField] private float mFallGravityMultiplier = 1.5f;
 
     private Animator mAnimator;
     private Rigidbody2D mBody2d;
@@ -33,6 +35,7 @@ public class Player : MonoBehaviour
         HandleTimers();
         HandleGrounded();
         HandleInput();
+        ApplyVariableGravity();
         UpdateAnimator();
     }
 
@@ -70,6 +73,7 @@ public class Player : MonoBehaviour
     private void HandleInput()
     {
         float inputX = Input.GetAxisRaw("Horizontal");
+        float inputY = Input.GetAxisRaw("Vertical");
 
         // Flip sprite
         if (inputX > 0)
@@ -81,6 +85,11 @@ public class Player : MonoBehaviour
         {
             GetComponent<SpriteRenderer>().flipX = true;
             mFacingDirection = -1;
+        }
+
+        if (inputY < 0 && mBody2d.velocity.y > 0)
+        {
+            mBody2d.velocity = new Vector2(mBody2d.velocity.x, 0);
         }
 
         // Movement (disabled while rolling)
@@ -151,7 +160,13 @@ public class Player : MonoBehaviour
         mAnimator.SetTrigger("Jump");
         mGrounded = false;
         mAnimator.SetBool("Grounded", false);
-        mBody2d.velocity = new Vector2(mBody2d.velocity.x, mJumpForce);
+
+        // Zero out vertical velocity to make jumps consistent
+        mBody2d.velocity = new Vector2(mBody2d.velocity.x, 0f);
+
+        // Apply upward impulse force instead of setting velocity
+        mBody2d.AddForce(Vector2.up * mJumpForce, ForceMode2D.Impulse);
+
         mGroundSensor.Disable(0.2f);
     }
 
@@ -163,6 +178,23 @@ public class Player : MonoBehaviour
 
         mAnimator.SetTrigger("Attack" + mCurrentAttack);
         mTimeSinceAttack = 0.0f;
+    }
+
+    private void ApplyVariableGravity()
+    {
+        if (!mGrounded)
+        {
+            if (mBody2d.velocity.y < 0)
+            {
+                // Apply stronger gravity when falling
+                mBody2d.velocity += Vector2.up * Physics2D.gravity.y * (mFallGravityMultiplier - 1) * Time.deltaTime;
+            }
+            else if (mBody2d.velocity.y > 0 && !Input.GetKey(KeyCode.Space))
+            {
+                // If player released jump early, apply slightly more gravity for a short hop
+                mBody2d.velocity += Vector2.up * Physics2D.gravity.y * (1.2f - 1) * Time.deltaTime;
+            }
+        }
     }
 
     private void UpdateAnimator()

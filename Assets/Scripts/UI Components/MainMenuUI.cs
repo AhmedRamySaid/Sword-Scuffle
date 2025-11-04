@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Game;
+using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -411,6 +412,8 @@ namespace UI_Components
 
             // TODO: Implement host game logic here
             // Example: NetworkManager.Singleton.StartHost();
+            canvas.gameObject.SetActive(false);
+            GameManager.Instance.StartGame();
         }
 
         void OnJoinGameClicked()
