@@ -411,9 +411,8 @@ namespace UI_Components
             Debug.Log($"Host Game clicked! Username: {username}");
 
             // TODO: Implement host game logic here
-            // Example: NetworkManager.Singleton.StartHost();
             canvas.gameObject.SetActive(false);
-            GameManager.Instance.StartGame();
+            GameManager.Instance.HostGame();
         }
 
         void OnJoinGameClicked()
@@ -421,8 +420,8 @@ namespace UI_Components
             string username = GetUsername();
             Debug.Log($"Join Game clicked! Username: {username}");
 
-            // TODO: Implement join game logic here
-            // Example: NetworkManager.Singleton.StartClient();
+            // TODO: refactor username to ip address
+            GameManager.Instance.JoinGame(username);
         }
 
         string GetUsername()

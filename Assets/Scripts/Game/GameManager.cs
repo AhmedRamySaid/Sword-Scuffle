@@ -1,20 +1,43 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using System.Collections.Generic;
+using Networks;
+using UnityEngine;
 
 namespace Game
 {
     public class GameManager : MonoBehaviour
     {
         public static GameManager Instance;
-        public GameObject player;
+        public GameObject playerPrefab;
 
-        void Awake()
+        private Server server;
+        private Client localClient;
+
+        void Awake() => Instance = this;
+
+        public void HostGame()
         {
-            Instance = this;
+            StartCoroutine(HostAndJoin());
         }
 
-        public void StartGame()
+        private IEnumerator HostAndJoin()
         {
-            Instantiate(player, new Vector3(0, 0, 0), Quaternion.identity);
+            server = new Server();
+            server.InitializeServer();
+
+            yield return new WaitUntil(() => server.IsRunning);
+            JoinGame("127.0.0.1");
+        }
+
+        public void JoinGame(string serverIP)
+        {
+            localClient = new Client(serverIP);
+            StartGame();
+        }
+
+        private void StartGame()
+        {
+            Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
         }
     }
 }
