@@ -6,7 +6,7 @@ namespace UI_Components
 {
     public class MainMenuGenerator : MonoBehaviour
     {
-        private Canvas canvas;
+        public Canvas canvas;
         private GameObject usernameField;
         private GameObject hostButton;
         private GameObject joinButton;
@@ -46,24 +46,11 @@ namespace UI_Components
 
         void CreateCanvas()
         {
-            GameObject canvasObj = new GameObject("MainMenuCanvas");
-            canvas = canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-
-            CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
+            CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 0.5f;
-
-            canvasObj.AddComponent<GraphicRaycaster>();
-
-            // Add EventSystem if not present
-            if (FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)
-            {
-                GameObject eventSystem = new GameObject("EventSystem");
-                eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
-                eventSystem.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
-            }
         }
 
         void CreateBackground()
