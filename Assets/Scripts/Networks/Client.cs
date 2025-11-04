@@ -15,7 +15,7 @@ public class Client : MonoBehaviour
     public int port = 5555;
     private string logFilePath;
 
-    void Start()
+    void StartConnection()
     {
         logFilePath = Path.Combine(Application.persistentDataPath, "client_logs.txt");
         LogToFile("=== Client Started ===");
