@@ -4,7 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="More networks yay" />
+    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="Fixed Game scene so it extends">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/NetPacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/NetPacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -121,7 +127,7 @@
       <workItem from="1762007670122" duration="5813000" />
       <workItem from="1762215989726" duration="22000" />
       <workItem from="1762291225974" duration="8631000" />
-      <workItem from="1762327925021" duration="5222000" />
+      <workItem from="1762327925021" duration="10541000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -227,7 +233,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762333034399</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Fixed Game scene so it extends">
+      <option name="closed" value="true" />
+      <created>1762333836245</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1762333836245</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -267,7 +281,8 @@
     <MESSAGE value="Refactoring" />
     <MESSAGE value="I am tired" />
     <MESSAGE value="More networks yay" />
-    <option name="LAST_COMMIT_MESSAGE" value="More networks yay" />
+    <MESSAGE value="Fixed Game scene so it extends" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed Game scene so it extends" />
   </component>
   <component name="XDebuggerManager">
     <pin-to-top-manager>

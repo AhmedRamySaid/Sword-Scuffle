@@ -12,14 +12,14 @@ namespace Networks
     public class Server
     {
         public bool IsRunning = false;
-        
+
         private UdpClient udpServer;
         private Thread serverThread;
 
         private const int Port = 5555;
         private string logFilePath;
-        private readonly HashSet<IPEndPoint> clients = new HashSet<IPEndPoint>();
-        private readonly object clientsLock = new object();
+        private readonly Dictionary<IPEndPoint, uint> clientIds = new Dictionary<IPEndPoint, uint>();
+        private uint nextPlayerId = 1; // player ids start at 1, the client treats itself as 0
 
         public void InitializeServer()
         {
@@ -73,17 +73,44 @@ namespace Networks
             {
                 // Convert bytes into a NetPacket
                 NetPacket packet = NetPacket.FromBytes(data);
-                
+
                 LogToFile($"[From {sender.Address}:{sender.Port}] Packet received of {data.Length} bytes.");
-                
-                // Track the client
-                lock (clientsLock)
+
+                switch (packet.msgType)
                 {
-                    clients.Add(sender); // HashSet ignores duplicates automatically
+                    case (MessageType.CONNECT):
+                        if (packet.payload.Equals((true).ToString())) // Established a connection
+                        {
+                            if (!clientIds.TryGetValue(sender, out uint playerId))
+                            {
+                                playerId = nextPlayerId++;
+                                clientIds[sender] = playerId;
+                                LogToFile($"Registered new client {sender} with PlayerID {playerId}");
+                            }
+                        }
+                        else // Terminated the connection
+                        {
+                            //todo implement
+                        }
+                        break;
                 }
 
+                clientIds.TryGetValue(sender, out uint id);
+                byte[] idBytes = Encoding.ASCII.GetBytes($"ID:{id}."); // convert string to bytes
+                byte[] newPayload = new byte[idBytes.Length + packet.payload.Length];
+
+                // copy ID bytes first
+                Buffer.BlockCopy(idBytes, 0, newPayload, 0, idBytes.Length);
+
+                // copy the original payload after
+                Buffer.BlockCopy(packet.payload, 0, newPayload, idBytes.Length, packet.payload.Length);
+
+                // assign back to packet.payload
+                packet.payload = newPayload;
+                packet.payloadLength = (ushort)newPayload.Length;
+
                 // Broadcast to all other clients
-                BroadcastToClients(data, sender);
+                BroadcastToClients(packet.ToBytes(), sender);
             }
             catch (Exception e)
             {
@@ -94,25 +121,22 @@ namespace Networks
 
         private void BroadcastToClients(byte[] data, IPEndPoint sender)
         {
-            lock (clientsLock)
+            foreach (var pair in clientIds)
             {
-                foreach (var clientEP in clients)
-                {
-                    if (clientEP.Equals(sender)) continue; // skip sender
+                var clientEP = pair.Key;
+                if (clientEP.Equals(sender)) continue; // skip sender
 
-                    try
-                    {
-                        udpServer.Send(data, data.Length, clientEP);
-                    }
-                    catch (Exception e)
-                    {
-                        LogToFile($"Failed to send to {clientEP}: {e.Message}");
-                    }
+                try
+                {
+                    udpServer.Send(data, data.Length, clientEP);
+                }
+                catch (Exception e)
+                {
+                    LogToFile($"Failed to send to {clientEP}: {e.Message}");
                 }
             }
         }
 
-        
         public void StopServer()
         {
             IsRunning = false;

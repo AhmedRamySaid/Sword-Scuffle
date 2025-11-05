@@ -53,6 +53,7 @@ namespace Networks
                 // Start receiving thread
                 receiveThread = new Thread(ReceiveData);
                 receiveThread.Start();
+                SendConnection(true);
             }
             catch (Exception e)
             {
@@ -74,28 +75,8 @@ namespace Networks
 
                     Debug.Log($"[UDP] Received packet from {remoteEP.Address}:{remoteEP.Port}");
                     LogToFile($"[From Server] Received packet ({receivedBytes.Length} bytes)");
-
-                    // Parse payload into Vector3
-                    string payloadStr = Encoding.ASCII.GetString(packet.payload);
-                    string[] parts = payloadStr.Split(',');
-
-                    if (parts.Length == 3 && 
-                        float.TryParse(parts[0], out float x) &&
-                        float.TryParse(parts[1], out float y) &&
-                        float.TryParse(parts[2], out float z))
-                    {
-                        Vector3 delta = new Vector3(x, y, z);
-
-                        // Forward to GameManager on the main thread
-                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
-                        {
-                            GameManager.Instance.ApplyMovement(0, delta);
-                        });
-                    }
-                    else
-                    {
-                        Debug.LogWarning("Invalid payload received: " + payloadStr);
-                    }
+                    
+                    ParsePayload(packet);
                 }
             }
             catch (SocketException se)
@@ -110,6 +91,49 @@ namespace Networks
             {
                 Debug.LogError("Receive error: " + e.Message);
                 LogToFile("Receive error: " + e.Message);
+            }
+        }
+
+        private void ParsePayload(NetPacket packet)
+        {
+            string payloadStr = Encoding.ASCII.GetString(packet.payload);
+            string[] parts = payloadStr.Split(new char[] { ':', '.' }, StringSplitOptions.RemoveEmptyEntries);
+            uint playerId = uint.Parse(parts[1]);
+            
+            switch (packet.msgType)
+            {
+                case MessageType.CONNECT:
+                    if (parts[2].Equals((true).ToString())) // Established a connection
+                    {
+                        GameManager.Instance.AddPlayer(playerId);
+                    }
+                    else // Terminated the connection
+                    {
+                        GameManager.Instance.RemovePlayer(playerId);
+                    }
+                    break;
+                case MessageType.SNAPSHOT:
+                    // Parse payload into Vector3
+                    string[] vectorParts = parts[2].Split(',');
+
+                    if (parts.Length == 3 && 
+                        float.TryParse(vectorParts[0], out float x) &&
+                        float.TryParse(vectorParts[1], out float y) &&
+                        float.TryParse(vectorParts[2], out float z))
+                    {
+                        Vector3 delta = new Vector3(x, y, z);
+
+                        // Forward to GameManager on the main thread
+                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                        {
+                            GameManager.Instance.ApplyMovement(0, delta);
+                        });
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Invalid payload received: " + payloadStr);
+                    }
+                    break;
             }
         }
 
@@ -144,6 +168,28 @@ namespace Networks
 
             Debug.Log($"[UDP] Sent movement packet ({data.Length} bytes)");
             LogToFile($"[Sent Movement] seqNum={packet.seqNum}, len={data.Length}");
+        }
+
+        public void SendConnection(bool establishedConnection)
+        {
+            if (!Connected || udpClient == null) return;
+
+            byte[] payload = Encoding.ASCII.GetBytes(establishedConnection.ToString());
+            NetPacket packet = new NetPacket
+            {
+                msgType = MessageType.CONNECT,
+                snapshotId = 0,
+                seqNum = nextSeqNum++,
+                serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                payload = payload,
+                payloadLength = (ushort)payload.Length
+            };
+
+            byte[] data = packet.ToBytes();
+            udpClient.Send(data, data.Length);
+
+            Debug.Log($"[UDP] Sent connection packet ({data.Length} bytes)");
+            LogToFile($"[Sent Connection] seqNum={packet.seqNum}, len={data.Length}");
         }
 
         public void StopClient()

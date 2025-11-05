@@ -9,12 +9,13 @@ namespace Networks
     {
         SNAPSHOT = 0,
         EVENT = 1,
-        ACK = 2
+        ACK = 2,
+        CONNECT = 3
     }
 
     public class NetPacket
     {
-        public const string PROTOCOL_ID = "GMP1"; // 4 ASCII chars
+        public const string PROTOCOL_ID = "LABA"; // 4 ASCII chars
         public const byte VERSION = 1;
 
         public MessageType msgType;
