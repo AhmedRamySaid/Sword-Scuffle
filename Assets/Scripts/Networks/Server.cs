@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -12,40 +13,46 @@ namespace Networks
     {
         public bool IsRunning = false;
         
-        private TcpListener server;
+        private UdpClient udpServer;
         private Thread serverThread;
 
         private const int Port = 5555;
         private string logFilePath;
+        private readonly HashSet<IPEndPoint> clients = new HashSet<IPEndPoint>();
+        private readonly object clientsLock = new object();
 
         public void InitializeServer()
         {
-            // Prepare log file path
             logFilePath = Path.Combine(Application.persistentDataPath, "server_logs.txt");
-            LogToFile("=== Server Started ===");
+            LogToFile("=== UDP Server Started ===");
 
+            IsRunning = true;
             serverThread = new Thread(StartServer);
             serverThread.Start();
         }
 
-        void StartServer()
+        private void StartServer()
         {
             try
             {
-                server = new TcpListener(IPAddress.Any, Port);
-                server.Start();
-                IsRunning = true;
-                Debug.Log("Server started on port " + Port);
-                LogToFile("Server listening on port " + Port);
+                udpServer = new UdpClient(Port);
+                Debug.Log($"UDP Server started on port {Port}");
+                LogToFile($"Server listening on UDP port {Port}");
+
+                IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
 
                 while (IsRunning)
                 {
-                    TcpClient client = server.AcceptTcpClient();
-                    Debug.Log("Client connected!");
-                    LogToFile("Client connected.");
-
-                    Thread clientThread = new Thread(() => HandleClient(client));
-                    clientThread.Start();
+                    byte[] receivedBytes = udpServer.Receive(ref remoteEP); // blocking call
+                    HandlePacket(receivedBytes, remoteEP);
+                }
+            }
+            catch (SocketException se)
+            {
+                if (IsRunning)
+                {
+                    Debug.LogError("Socket error: " + se.Message);
+                    LogToFile("Socket error: " + se.Message);
                 }
             }
             catch (Exception e)
@@ -53,46 +60,66 @@ namespace Networks
                 Debug.LogError("Server error: " + e.Message);
                 LogToFile("Server error: " + e.Message);
             }
+            finally
+            {
+                udpServer?.Close();
+                LogToFile("=== UDP Server Stopped ===");
+            }
         }
 
-        void HandleClient(TcpClient client)
+        private void HandlePacket(byte[] data, IPEndPoint sender)
         {
-            NetworkStream stream = client.GetStream();
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-
             try
             {
-                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) != 0)
+                // Convert bytes into a NetPacket
+                NetPacket packet = NetPacket.FromBytes(data);
+                
+                LogToFile($"[From {sender.Address}:{sender.Port}] Packet received of {data.Length} bytes.");
+                
+                // Track the client
+                lock (clientsLock)
                 {
-                    string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                    Debug.Log("Received from client: " + message);
-                    LogToFile("[From Client] " + message);
-
-                    // Echo back
-                    byte[] response = Encoding.ASCII.GetBytes("Server received: " + message);
-                    stream.Write(response, 0, response.Length);
+                    clients.Add(sender); // HashSet ignores duplicates automatically
                 }
+
+                // Broadcast to all other clients
+                BroadcastToClients(data, sender);
             }
             catch (Exception e)
             {
-                Debug.LogError("Client error: " + e.Message);
-                LogToFile("Client error: " + e.Message);
-            }
-            finally
-            {
-                client.Close();
-                Debug.Log("Client disconnected.");
-                LogToFile("Client disconnected.");
+                Debug.LogError("Packet handling error: " + e.Message);
+                LogToFile("Packet handling error: " + e.Message);
             }
         }
 
-        void OnApplicationQuit()
+        private void BroadcastToClients(byte[] data, IPEndPoint sender)
+        {
+            lock (clientsLock)
+            {
+                foreach (var clientEP in clients)
+                {
+                    if (clientEP.Equals(sender)) continue; // skip sender
+
+                    try
+                    {
+                        udpServer.Send(data, data.Length, clientEP);
+                    }
+                    catch (Exception e)
+                    {
+                        LogToFile($"Failed to send to {clientEP}: {e.Message}");
+                    }
+                }
+            }
+        }
+
+        
+        public void StopServer()
         {
             IsRunning = false;
-            server?.Stop();
-            serverThread?.Abort();
-            LogToFile("=== Server Stopped ===");
+            udpServer?.Close();
+            serverThread?.Join();
+            LogToFile("=== UDP Server Stopped ===");
+            Debug.Log("UDP server stopped.");
         }
 
         private void LogToFile(string text)

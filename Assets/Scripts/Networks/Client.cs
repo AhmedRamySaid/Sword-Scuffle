@@ -1,22 +1,27 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using Game;
 using UnityEngine;
 
 namespace Networks
 {
     public class Client
     {
-        private TcpClient client;
-        private NetworkStream stream;
+        public bool Connected = false;
+
+        private UdpClient udpClient;
         private Thread receiveThread;
 
         private readonly string serverIP;
         private const int Port = 5555;
         private string logFilePath;
         private uint nextSeqNum = 0;
+
+        private IPEndPoint serverEndPoint;
 
         public Client(string serverIP)
         {
@@ -27,7 +32,7 @@ namespace Networks
         void StartConnection()
         {
             logFilePath = Path.Combine(Application.persistentDataPath, "client_logs.txt");
-            LogToFile("=== Client Started ===");
+            LogToFile("=== UDP Client Started ===");
 
             ConnectToServer();
         }
@@ -36,18 +41,18 @@ namespace Networks
         {
             try
             {
-                client = new TcpClient(serverIP, Port);
-                stream = client.GetStream();
+                serverEndPoint = new IPEndPoint(IPAddress.Parse(serverIP), Port);
+                udpClient = new UdpClient();
+                udpClient.Connect(serverEndPoint);
 
-                Debug.Log("Connected to server!");
-                LogToFile("Connected to server.");
+                Debug.Log("UDP Client ready.");
+                LogToFile("UDP Client initialized and ready.");
 
-                // Start a thread to receive messages
+                Connected = true;
+
+                // Start receiving thread
                 receiveThread = new Thread(ReceiveData);
                 receiveThread.Start();
-
-                // Example: Send a test message
-                SendMessageToServer("Hello from client!");
             }
             catch (Exception e)
             {
@@ -58,16 +63,47 @@ namespace Networks
 
         void ReceiveData()
         {
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-
+            IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
             try
             {
-                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) != 0)
+                while (Connected)
                 {
-                    string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                    Debug.Log("Received from server: " + message);
-                    LogToFile("[From Server] " + message);
+                    byte[] receivedBytes = udpClient.Receive(ref remoteEP); // blocking call
+
+                    NetPacket packet = NetPacket.FromBytes(receivedBytes);
+
+                    Debug.Log($"[UDP] Received packet from {remoteEP.Address}:{remoteEP.Port}");
+                    LogToFile($"[From Server] Received packet ({receivedBytes.Length} bytes)");
+
+                    // Parse payload into Vector3
+                    string payloadStr = Encoding.ASCII.GetString(packet.payload);
+                    string[] parts = payloadStr.Split(',');
+
+                    if (parts.Length == 3 && 
+                        float.TryParse(parts[0], out float x) &&
+                        float.TryParse(parts[1], out float y) &&
+                        float.TryParse(parts[2], out float z))
+                    {
+                        Vector3 delta = new Vector3(x, y, z);
+
+                        // Forward to GameManager on the main thread
+                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                        {
+                            GameManager.Instance.ApplyMovement(0, delta);
+                        });
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Invalid payload received: " + payloadStr);
+                    }
+                }
+            }
+            catch (SocketException se)
+            {
+                if (Connected)
+                {
+                    Debug.LogError("UDP receive error: " + se.Message);
+                    LogToFile("UDP receive error: " + se.Message);
                 }
             }
             catch (Exception e)
@@ -79,20 +115,44 @@ namespace Networks
 
         public void SendMessageToServer(string message)
         {
-            if (stream == null) return;
+            if (!Connected || udpClient == null) return;
 
-            byte[] data = Encoding.ASCII.GetBytes(message);
-            stream.Write(data, 0, data.Length);
-            Debug.Log("Sent to server: " + message);
+            byte[] data = Encoding.UTF8.GetBytes(message);
+            udpClient.Send(data, data.Length);
+
+            Debug.Log("[UDP] Sent to server: " + message);
             LogToFile("[Sent] " + message);
         }
 
-        void OnApplicationQuit()
+        public void SendMovement(Vector3 delta)
         {
-            stream?.Close();
-            client?.Close();
-            receiveThread?.Abort();
-            LogToFile("=== Client Stopped ===");
+            if (!Connected || udpClient == null) return;
+
+            byte[] payload = Encoding.ASCII.GetBytes($"{delta.x},{delta.y},{delta.z}");
+            NetPacket packet = new NetPacket
+            {
+                msgType = MessageType.EVENT,
+                snapshotId = 0,
+                seqNum = nextSeqNum++,
+                serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                payload = payload,
+                payloadLength = (ushort)payload.Length
+            };
+
+            byte[] data = packet.ToBytes();
+            udpClient.Send(data, data.Length);
+
+            Debug.Log($"[UDP] Sent movement packet ({data.Length} bytes)");
+            LogToFile($"[Sent Movement] seqNum={packet.seqNum}, len={data.Length}");
+        }
+
+        public void StopClient()
+        {
+            Connected = false;
+            udpClient?.Close();
+            receiveThread?.Join();
+            LogToFile("=== UDP Client Stopped ===");
+            Debug.Log("UDP client stopped.");
         }
 
         private void LogToFile(string text)
@@ -106,23 +166,6 @@ namespace Networks
             {
                 Debug.LogError("Failed to write log: " + e.Message);
             }
-        }
-        
-        public void SendMovement(Vector3 delta)
-        {
-            byte[] payload = Encoding.UTF8.GetBytes($"{delta.x},{delta.y},{delta.z}");
-            NetPacket packet = new NetPacket
-            {
-                msgType = MessageType.EVENT,
-                snapshotId = 0,
-                seqNum = nextSeqNum++,
-                serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                payload = payload,
-                payloadLength = (ushort)payload.Length
-            };
-
-            byte[] data = packet.ToBytes();
-            stream.Write(data, 0, data.Length);
         }
     }
 }

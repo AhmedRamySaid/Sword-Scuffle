@@ -1,5 +1,5 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Networks;
 using UnityEngine;
 
@@ -12,6 +12,11 @@ namespace Game
 
         private Server server;
         private Client localClient;
+        private GameObject player;
+        private Vector3 lastSentPosition;
+
+        private const int Frequency = 20;
+        private const float SendInterval = 1.0f/Frequency;
 
         void Awake() => Instance = this;
 
@@ -35,10 +40,29 @@ namespace Game
             localClient = new Client("127.0.0.1");
             StartGame();
         }
-
-        private void StartGame()
+        
+        private async void StartGame()
         {
-            Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+            player = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+            lastSentPosition = player.transform.position;
+            await SendMovement();
+        }
+
+        private async Task SendMovement()
+        {
+            while (localClient.Connected)   
+            {
+                Vector3 currentPos = player.transform.position;
+                Vector3 deltaPos = lastSentPosition - currentPos;
+                lastSentPosition = currentPos;
+                await Task.Run(() => localClient.SendMovement(deltaPos));
+                await Task.Delay((int)(SendInterval * 1000));
+            }
+        }
+
+        public void ApplyMovement(int ID, Vector3 deltaPos)
+        {
+            
         }
     }
 }
