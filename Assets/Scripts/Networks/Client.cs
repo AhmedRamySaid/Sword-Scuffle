@@ -178,6 +178,15 @@ namespace Networks
                         });
                     }
                     break;
+                case MessageType.ID_SET:
+                    if (uint.TryParse(payloadStr, out uint playerId))
+                    {
+                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                        {
+                            GameManager.Instance.ApplyClientId(playerId);
+                        });
+                    }
+                    break;
             }
         }
 

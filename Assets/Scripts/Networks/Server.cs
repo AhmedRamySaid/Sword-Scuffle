@@ -87,6 +87,7 @@ namespace Networks
                                 clientIds[sender] = playerId;
                                 Debug.Log($"Registered new client {sender} with PlayerID {playerId}");
                                 LogToFile($"Registered new client {sender} with PlayerID {playerId}");
+                                SendPlayerId(sender, playerId);
                                 SendKeyframe(sender);
                             }
                         }
@@ -125,17 +126,36 @@ namespace Networks
 
         private void SendKeyframe(IPEndPoint sender)
         {
-            if (!clientIds.TryGetValue(sender, out uint senderID)) return;
+            if (clientIds.TryGetValue(sender, out uint playerId))
+            {
+                if (GameManager.Instance.Players.TryGetValue(playerId, out GameObject player))
+                {
+                    if (GameManager.Instance.player.Equals(player)) return;
+                }
+            }
 
             var sb = new StringBuilder();
 
-            foreach (KeyValuePair<uint, GameObject> player in GameManager.Instance.Players)
+            foreach (KeyValuePair<IPEndPoint, uint> clientId in clientIds)
             {
+                if (!GameManager.Instance.Players.TryGetValue(clientId.Value, out GameObject player))
+                {
+                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                    {
+                        player = new GameObject();
+                        player.transform.position = new Vector3(3, 3, 1); // default coordinates for player prefab
+                    });
+                }
+                
                 // If it's the sender, mark as 0; otherwise use the player's ID
-                sb.Append(player.Key == senderID ? "0" : player.Key.ToString());
+                sb.Append(clientId.Value.ToString());
 
                 // Append positions using InvariantCulture to use a standard form across all devices
-                Vector3 pos = player.Value.transform.position;
+                Vector3 pos = Vector3.zero;
+                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                {
+                    pos = player.transform.position;
+                });
                 sb.Append(':')
                     .Append(pos.x.ToString(CultureInfo.InvariantCulture))
                     .Append(':')
@@ -178,6 +198,23 @@ namespace Networks
                     LogToFile($"Failed to send to {clientEP}: {e.Message}");
                 }
             }
+        }
+
+        private void SendPlayerId(IPEndPoint sender, uint playerId)
+        {
+            byte[] payloadBytes = Encoding.ASCII.GetBytes(playerId.ToString());
+            NetPacket packet = new NetPacket
+            {
+                msgType = MessageType.ID_SET,
+                snapshotId = 0,
+                seqNum = 0,
+                serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                payload = payloadBytes,
+                payloadLength = (ushort)payloadBytes.Length
+            };
+            
+            byte[] data = packet.ToBytes();
+            udpServer.Send(data, data.Length, sender);
         }
 
         public void StopServer()

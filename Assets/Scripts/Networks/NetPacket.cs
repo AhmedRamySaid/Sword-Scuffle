@@ -11,7 +11,8 @@ namespace Networks
         EVENT = 1,
         ACK = 2,
         CONNECT = 3,
-        KEYFRAME = 4
+        KEYFRAME = 4,
+        ID_SET = 5
     }
 
     public class NetPacket
