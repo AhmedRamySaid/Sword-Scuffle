@@ -7,7 +7,7 @@ Library: D:\My Stuff\Computer science\Projects\Networks project\Temp\BurstOutput
 --dump=Function
 --float-precision=Standard
 --target-framework=NetFramework
---linker-options=PdbAltPath="Networks project_Data/Plugins/x86_64/lib_burst_generated.pdb"
+--linker-options=PdbAltPath="Sword Scuffle_Data/Plugins/x86_64/lib_burst_generated.pdb"
 --generate-link-xml=Temp\burst.link.xml
 --temp-folder=D:\My Stuff\Computer science\Projects\Networks project\Temp\Burst
 --key-folder=C:/Program Files/Unity/Hub/Editor/2022.3.36f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport
@@ -54,7 +54,7 @@ Library: D:\My Stuff\Computer science\Projects\Networks project\Temp\BurstOutput
 --dump=Function
 --float-precision=Standard
 --target-framework=NetFramework
---linker-options=PdbAltPath="Networks project_Data/Plugins/x86_64/lib_burst_generated.pdb"
+--linker-options=PdbAltPath="Sword Scuffle_Data/Plugins/x86_64/lib_burst_generated.pdb"
 --generate-link-xml=Temp\burst.link.xml
 --temp-folder=D:\My Stuff\Computer science\Projects\Networks project\Temp\Burst
 --key-folder=C:/Program Files/Unity/Hub/Editor/2022.3.36f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport

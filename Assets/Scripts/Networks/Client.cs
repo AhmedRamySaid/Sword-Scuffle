@@ -94,20 +94,21 @@ namespace Networks
         private void ParsePayload(NetPacket packet)
         {
             string payloadStr = Encoding.ASCII.GetString(packet.payload);
-            string[] parts = payloadStr.Split(new char[] { ':', '.' }, StringSplitOptions.RemoveEmptyEntries);
-            uint playerId = uint.Parse(parts[1]);
             
             switch (packet.msgType)
             {
                 case MessageType.CONNECT:
-                    if (((char)(parts[2][0])).Equals('1'))
+                    string[] connectParts = payloadStr.Split(new char[] { ':', '.' }, StringSplitOptions.RemoveEmptyEntries);
+                    uint connectPlayerId = uint.Parse(connectParts[1]);
+                    
+                    if (((char)(connectParts[2][0])).Equals('1'))
                     {
                         // a player established a connection
                         // Forward to GameManager on the main thread
                         UnityMainThreadDispatcher.Instance().Enqueue(() =>
                         {
-                            GameManager.Instance.AddPlayer(playerId);
-                            LogToFile("Player connected with ID:" + playerId);
+                            GameManager.Instance.AddPlayer(connectPlayerId);
+                            LogToFile("Player connected with ID:" + connectPlayerId);
                         });
                     }
                     else
@@ -116,16 +117,19 @@ namespace Networks
                         // Forward to GameManager on the main thread
                         UnityMainThreadDispatcher.Instance().Enqueue(() =>
                         {
-                            GameManager.Instance.RemovePlayer(playerId);
-                            LogToFile("Player disconnected with ID:" + playerId);
+                            GameManager.Instance.RemovePlayer(connectPlayerId);
+                            LogToFile("Player disconnected with ID:" + connectPlayerId);
                         });
                     }
                     break;
                 case MessageType.SNAPSHOT:
+                    string[] snapshotParts = payloadStr.Split(new char[] { ':', '.' }, StringSplitOptions.RemoveEmptyEntries);
+                    uint snapshotPlayerId = uint.Parse(snapshotParts[1]);
+                    
                     // Parse payload into Vector3
-                    string[] vectorParts = parts[2].Split(',');
+                    string[] vectorParts = snapshotParts[2].Split(',');
 
-                    if (parts.Length == 3 && 
+                    if (snapshotParts.Length == 3 && 
                         float.TryParse(vectorParts[0], out float x) &&
                         float.TryParse(vectorParts[1], out float y) &&
                         float.TryParse(vectorParts[2], out float z))
@@ -135,12 +139,52 @@ namespace Networks
                         // Forward to GameManager on the main thread
                         UnityMainThreadDispatcher.Instance().Enqueue(() =>
                         {
-                            GameManager.Instance.ApplyMovement(0, delta);
+                            GameManager.Instance.ApplyDeltaMovement(snapshotPlayerId, delta);
                         });
                     }
                     else
                     {
                         Debug.LogWarning("Invalid payload received: " + payloadStr);
+                    }
+                    break;
+                case MessageType.KEYFRAME:
+                    string[] lines = payloadStr.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    foreach (string line in lines)
+                    {
+                        string[] keyframeParts = line.Split(':');
+                        if (keyframeParts.Length != 4)
+                        {
+                            LogToFile("Invalid line in keyframe payload: " + line);
+                            continue;
+                        }
+
+                        // Parse ID and coordinates
+                        if (!uint.TryParse(keyframeParts[0], out uint keyframeId)) continue;
+                        if (!float.TryParse(keyframeParts[1], System.Globalization.NumberStyles.Float,
+                                System.Globalization.CultureInfo.InvariantCulture, out float xCor)) continue;
+                        if (!float.TryParse(keyframeParts[2], System.Globalization.NumberStyles.Float,
+                                System.Globalization.CultureInfo.InvariantCulture, out float yCor)) continue;
+                        if (!float.TryParse(keyframeParts[3], System.Globalization.NumberStyles.Float,
+                                System.Globalization.CultureInfo.InvariantCulture, out float zCor)) continue;
+
+                        Vector3 position = new Vector3(xCor, yCor, zCor);
+
+                        // Apply position to your player object
+                        // Ensure this runs on the main thread if using Unity
+                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                        {
+                            GameManager.Instance.ApplyMovement(keyframeId, position);
+                        });
+                    }
+                    break;
+                case MessageType.ID_SET:
+                    if (uint.TryParse(payloadStr, out uint playerId))
+                    {
+                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                        {
+                            GameManager.Instance.ApplyClientId(playerId);
+                        });
                     }
                     break;
             }

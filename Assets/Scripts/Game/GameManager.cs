@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Networks;
@@ -11,16 +10,25 @@ namespace Game
     {
         public static GameManager Instance;
         public GameObject playerPrefab;
-
+        public Dictionary<uint, GameObject> Players;
+        public GameObject player;
+        
         private Server server;
         private Client localClient;
         private Vector3 lastSentPosition;
-        private readonly Dictionary<uint, GameObject> players = new Dictionary<uint, GameObject>();
         
         private const int Frequency = 20;
         private const float SendInterval = 1.0f/Frequency;
 
         void Awake() => Instance = this;
+
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.F11))
+            {
+                Screen.fullScreen = !Screen.fullScreen;
+            }
+        }
 
         public void HostGame()
         {
@@ -45,9 +53,11 @@ namespace Game
         
         private async void StartGame()
         {
-            GameObject player = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+            Players = new Dictionary<uint, GameObject>();
+            player = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
             lastSentPosition = player.transform.position;
-            players.Add(0, player);
+            Players.Add(1, player);
+            player.GetComponent<Player>().isPlayer = true;
             await SendMovement();
         }
 
@@ -55,7 +65,7 @@ namespace Game
         {
             while (localClient.Connected)   
             {
-                Vector3 currentPos = players[0].transform.position;
+                Vector3 currentPos = player.transform.position;
                 Vector3 deltaPos = lastSentPosition - currentPos;
                 lastSentPosition = currentPos;
                 await Task.Run(() => localClient.SendMovement(deltaPos));
@@ -63,24 +73,42 @@ namespace Game
             }
         }
 
-        public void ApplyMovement(int id, Vector3 deltaPos)
+        public void ApplyMovement(uint id, Vector3 position)
         {
-            
+            if (!Players.TryGetValue(id, out GameObject p))
+            {
+                p = AddPlayer(id);
+            }
+            p.transform.position = position;
         }
 
-        public void AddPlayer(uint id)
+        public void ApplyDeltaMovement(uint id, Vector3 deltaPos)
+        {
+            //todo: change
+            GameObject player = Players[id];
+            player.transform.position += deltaPos;
+        }
+
+        public GameObject AddPlayer(uint id)
         {
             GameObject newPlayer = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
-            players.Add(id, newPlayer);
+            Players.Add(id, newPlayer);
+            return newPlayer;
         }
         
         public void RemovePlayer(uint id)
         {
-            if (players.TryGetValue(id, out GameObject value))
+            if (Players.TryGetValue(id, out GameObject value))
             {
-                players.Remove(1);
+                Players.Remove(id);
                 Destroy(value);
             }
+        }
+        
+        public void ApplyClientId(uint id)
+        {
+            Players.Remove(1);
+            Players.Add(id, player);
         }
 
         private void OnApplicationQuit()

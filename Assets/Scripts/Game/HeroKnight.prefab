@@ -335,7 +335,7 @@ GameObject:
   - component: {fileID: 4669340946430952321}
   - component: {fileID: 4792846717441435592}
   - component: {fileID: 86155475728803422}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HeroKnight
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -541,6 +541,7 @@ MonoBehaviour:
   mJumpForce: 15
   mRollForce: 25
   mFallGravityMultiplier: 5
+  isPlayer: 0
 --- !u!1 &8777916009996559014
 GameObject:
   m_ObjectHideFlags: 0

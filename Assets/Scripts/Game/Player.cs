@@ -23,6 +23,8 @@ public class Player : MonoBehaviour
     private float mRollCurrentTime;
     private readonly float mRollDuration = 8f / 14f; // ~0.57s
 
+    public bool isPlayer = false;
+    
     private void Start()
     {
         mAnimator = GetComponent<Animator>();
@@ -72,6 +74,7 @@ public class Player : MonoBehaviour
 
     private void HandleInput()
     {
+        if (!isPlayer) return;
         float inputX = Input.GetAxisRaw("Horizontal");
         float inputY = Input.GetAxisRaw("Vertical");
 
