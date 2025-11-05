@@ -4,21 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="Added code for multiple clients to play together">
+    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/NetPacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/NetPacket.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/UnityMainThreadDispatcher.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/UnityMainThreadDispatcher.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Networks project_Data/Managed/Assembly-CSharp.dll" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Networks project_Data/Managed/Assembly-CSharp.dll" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Networks project_Data/boot.config" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Networks project_Data/boot.config" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Networks project_Data/globalgamemanagers" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Networks project_Data/globalgamemanagers" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Networks project_Data/globalgamemanagers.assets" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Networks project_Data/globalgamemanagers.assets" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Networks project_Data/level0" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Networks project_Data/level0" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Networks project_Data/sharedassets0.assets" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Networks project_Data/sharedassets0.assets" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/ProjectSettings.asset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -51,6 +41,7 @@
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/2e/db75a0dd/ExceptionDispatchInfo.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/8f/75e29d71/Dictionary`2.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock://D:/My Stuff/Computer science/Projects/Networks project/Assets/Scenes/GameScene.unity" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock://D:/My Stuff/Computer science/Projects/Networks project/Assets/Scripts/Game/GameManager.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock://D:/My Stuff/Computer science/Projects/Networks project/Assets/Scripts/Game/GameManager.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Game/Player.cs" root0="FORCE_HIGHLIGHTING" />
@@ -69,20 +60,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Attach to Unity Editor.Attach to Unity Editor.executor": "Debug",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "XThreadsFramesViewSplitterKey": "0.19642857",
-    "git-widget-placeholder": "network",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Attach to Unity Editor.Attach to Unity Editor.executor&quot;: &quot;Debug&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;XThreadsFramesViewSplitterKey&quot;: &quot;0.19642857&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;network&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Attach to Unity Editor.Attach to Unity Editor">
     <configuration name="Standalone Player" type="RunUnityExe" factoryName="Unity Executable">
       <option name="EXE_PATH" value="$PROJECT_DIR$/Bin\Networks project.exe" />
@@ -118,10 +109,10 @@
       </option>
       <method v="2" />
     </configuration>
-    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost" ignored-value-for-modified-check="12164">
+    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost">
       <option name="allowRunningInParallel" value="false" />
       <option name="listenPortForConnections" value="false" />
-      <option name="pid" value="12164" />
+      <option name="pid" />
       <option name="projectPathOnTarget" />
       <option name="selectedOptions">
         <list />
@@ -140,7 +131,8 @@
       <workItem from="1762007670122" duration="5813000" />
       <workItem from="1762215989726" duration="22000" />
       <workItem from="1762291225974" duration="8631000" />
-      <workItem from="1762327925021" duration="15675000" />
+      <workItem from="1762327925021" duration="16127000" />
+      <workItem from="1762352921715" duration="1401000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -262,7 +254,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762345312946</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="Now you can establish multiple connections">
+      <option name="closed" value="true" />
+      <created>1762350610334</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1762350610334</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -304,7 +304,8 @@
     <MESSAGE value="More networks yay" />
     <MESSAGE value="Fixed Game scene so it extends" />
     <MESSAGE value="Added code for multiple clients to play together" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added code for multiple clients to play together" />
+    <MESSAGE value="Now you can establish multiple connections" />
+    <option name="LAST_COMMIT_MESSAGE" value="Now you can establish multiple connections" />
   </component>
   <component name="XDebuggerManager">
     <pin-to-top-manager>

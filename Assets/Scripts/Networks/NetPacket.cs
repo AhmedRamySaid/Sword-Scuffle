@@ -10,7 +10,8 @@ namespace Networks
         SNAPSHOT = 0,
         EVENT = 1,
         ACK = 2,
-        CONNECT = 3
+        CONNECT = 3,
+        KEYFRAME = 4
     }
 
     public class NetPacket

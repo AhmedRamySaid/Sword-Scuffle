@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using Game;
 using UnityEngine;
 
 namespace Networks
@@ -85,6 +87,7 @@ namespace Networks
                                 clientIds[sender] = playerId;
                                 Debug.Log($"Registered new client {sender} with PlayerID {playerId}");
                                 LogToFile($"Registered new client {sender} with PlayerID {playerId}");
+                                SendKeyframe(sender);
                             }
                         }
                         else // Terminated the connection
@@ -120,12 +123,51 @@ namespace Networks
             }
         }
 
-        private void BroadcastToClients(byte[] data, IPEndPoint sender)
+        private void SendKeyframe(IPEndPoint sender)
+        {
+            if (!clientIds.TryGetValue(sender, out uint senderID)) return;
+
+            var sb = new StringBuilder();
+
+            foreach (KeyValuePair<uint, GameObject> player in GameManager.Instance.Players)
+            {
+                // If it's the sender, mark as 0; otherwise use the player's ID
+                sb.Append(player.Key == senderID ? "0" : player.Key.ToString());
+
+                // Append positions using InvariantCulture to use a standard form across all devices
+                Vector3 pos = player.Value.transform.position;
+                sb.Append(':')
+                    .Append(pos.x.ToString(CultureInfo.InvariantCulture))
+                    .Append(':')
+                    .Append(pos.y.ToString(CultureInfo.InvariantCulture))
+                    .Append(':')
+                    .Append(pos.z.ToString(CultureInfo.InvariantCulture))
+                    .Append('\n');
+            }
+
+            string payload = sb.ToString();
+            
+            byte[] payloadBytes = Encoding.ASCII.GetBytes(payload);
+            NetPacket packet = new NetPacket
+            {
+                msgType = MessageType.KEYFRAME,
+                snapshotId = 0,
+                seqNum = 0,
+                serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                payload = payloadBytes,
+                payloadLength = (ushort)payloadBytes.Length
+            };
+            byte[] data = packet.ToBytes();
+            udpServer.Send(data, data.Length, sender);
+        }
+
+        private void BroadcastToClients(byte[] data, IPEndPoint sender = null)
         {
             foreach (var pair in clientIds)
             {
                 var clientEP = pair.Key;
-                if (clientEP.Equals(sender)) continue; // skip sender
+                // skip sender
+                if (sender != null && clientEP.Equals(sender)) continue;
 
                 try
                 {
