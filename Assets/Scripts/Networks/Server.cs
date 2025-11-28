@@ -115,6 +115,9 @@ namespace Networks
             }
         }
 
+        /*
+         * Different clients are seperated by a ';'
+         */
         private void SendKeyframe(IPEndPoint[] receivers)
         {
             var result = clientIds.
@@ -124,42 +127,15 @@ namespace Networks
 
             foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
             {
-                // if (!GameManager.Instance.Players.TryGetValue(clientId.Value, out Player player))
-                // {
-                //     UnityMainThreadDispatcher.Instance().Enqueue(() =>
-                //     {
-                //         player = new Player();
-                //         player.transform.position = new Vector3(3, 3, 1); // default coordinates for player prefab
-                //     });
-                // } //todo: fix
-                
-                
-                /*
-                 * Form: id:x,y;....;id:x,y
-                 * 
-                 * Example with 2 players
-                 * Player 1 position = 3.5,5.6
-                 * Player 2 position = 2.1,3.8
-                 * 
-                 * payload: 1:3.5,5.6;2:2.1,3.8
-                */
-                
-                sb.Append(clientId.Value.ToString());
-
-                // Append positions using InvariantCulture to use a standard form across all devices
-                Vector3 pos = Vector3.zero;
-                // UnityMainThreadDispatcher.Instance().Enqueue(() =>
-                // {
-                //     pos = player.transform.position;
-                // });
-                
-                sb.Append(':')
-                    .Append(pos.x.ToString(CultureInfo.InvariantCulture))
-                    .Append(',')
-                    .Append(pos.y.ToString(CultureInfo.InvariantCulture))
-                    .Append(';');
+                PlayerData playerData = players[clientId.Value];
+                sb.Append(playerData.ToRealString());
+                sb.Append(';');
             }
 
+            // Remove the trailing semi-column if present
+            if (sb.Length > 0)
+                sb.Length--;
+            
             string payload = sb.ToString();
             
             byte[] payloadBytes = Encoding.ASCII.GetBytes(payload);

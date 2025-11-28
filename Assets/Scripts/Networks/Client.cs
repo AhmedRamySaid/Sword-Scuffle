@@ -163,37 +163,12 @@ namespace Networks
             byte[] data = Encoding.UTF8.GetBytes(message);
             udpClient.Send(data, data.Length);
         }
-
-        /*
-         * Form: Rolling:{boolean},
-         * Facing:{boolean},
-         * Atk:{boolean},
-         * X:{float},
-         * Y:{float}
-         *
-         * The line breaks are purely visual and are not present within the packet
-         */
+        
         public void SendDeltaData(PlayerData data)
         {
             if (!Connected || udpClient == null) return;
-
-            StringBuilder sb = new StringBuilder();
-
-            if (data.rollingChanged)
-                sb.Append($"Rolling:{data.mRolling},");
-            if (data.mFacingDirection != 0)
-                sb.Append($"Facing:{data.mFacingDirection},");
-            if (data.attackingChanged)
-                sb.Append($"Atk:{data.isAttacking},");
-            if (data.xPos != 0)
-                sb.Append($"X:{data.xPos},");
-            if (data.yPos != 0)
-                sb.Append($"Y:{data.yPos},");
-
-            // Remove the trailing comma if present
-            if (sb.Length > 0)
-                sb.Length--;
-            byte[] payload = Encoding.ASCII.GetBytes(sb.ToString());
+            
+            byte[] payload = Encoding.ASCII.GetBytes(data.ToDeltaString());
             
             NetPacket packet = new NetPacket
             {

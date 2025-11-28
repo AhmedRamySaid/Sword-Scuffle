@@ -1,4 +1,6 @@
-﻿namespace Game
+﻿using System.Text;
+
+namespace Game
 {
     public class PlayerData
     {
@@ -101,6 +103,51 @@
             }
 
             return newData;
+        }
+
+        /*
+         * Form:
+         * Rolling:{boolean},
+         * Atk:{boolean},
+         * Facing:{int},
+         * X:{float},
+         * Y:{float}
+         *
+         * The line breaks are purely visual and are not present within the packet
+         */
+        public string ToDeltaString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            if (rollingChanged)
+                sb.Append($"Rolling:{mRolling},");
+            if (attackingChanged)
+                sb.Append($"Atk:{isAttacking},");
+            if (mFacingDirection != 0)
+                sb.Append($"Facing:{mFacingDirection},");
+            if (xPos != 0)
+                sb.Append($"X:{xPos},");
+            if (yPos != 0)
+                sb.Append($"Y:{yPos},");
+            
+            // Remove the trailing comma if present
+            if (sb.Length > 0)
+                sb.Length--;
+            
+            return sb.ToString();
+        }
+
+        public string ToRealString()
+        {
+            StringBuilder sb = new StringBuilder();
+            
+            sb.Append($"Rolling:{mRolling},");
+            sb.Append($"Atk:{isAttacking},");
+            sb.Append($"Facing:{mFacingDirection},");
+            sb.Append($"X:{xPos},");
+            sb.Append($"Y:{yPos}");
+            
+            return sb.ToString();
         }
     }
 }
