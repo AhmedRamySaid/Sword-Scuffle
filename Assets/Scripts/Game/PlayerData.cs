@@ -10,6 +10,9 @@
         public float xPos;
         public float yPos;
 
+        public bool rollingChanged;
+        public bool attackingChanged;
+
         public PlayerData()
         {
             mRolling = false;
@@ -31,13 +34,17 @@
         public static PlayerData SubtractData(PlayerData newData, PlayerData oldData)
         {
             PlayerData deltaData = new PlayerData();
+
+            deltaData.rollingChanged = oldData.mRolling != newData.mRolling;
+            deltaData.attackingChanged = oldData.isAttacking != newData.isAttacking;
             
-            if (oldData.mRolling != newData.mRolling) 
-                deltaData.mRolling = newData.mRolling;
             if (oldData.mFacingDirection != newData.mFacingDirection) 
-                deltaData.mFacingDirection = newData.mFacingDirection;
-            if (oldData.isAttacking != newData.isAttacking) 
-                deltaData.isAttacking = newData.isAttacking;
+                deltaData.mFacingDirection = 0;
+            else deltaData.mFacingDirection = newData.mFacingDirection;
+            
+            deltaData.mRolling = newData.mRolling;
+            deltaData.mFacingDirection = newData.mFacingDirection;
+            deltaData.isAttacking = newData.isAttacking;
             
             deltaData.mCurrentAttack = newData.mCurrentAttack - oldData.mCurrentAttack;
             deltaData.xPos = newData.xPos - oldData.xPos;

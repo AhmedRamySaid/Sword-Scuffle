@@ -21,11 +21,14 @@ namespace Networks
 
         private const int Port = 5555;
         private string logFilePath;
-        private readonly Dictionary<IPEndPoint, uint> clientIds = new Dictionary<IPEndPoint, uint>();
+        private Dictionary<IPEndPoint, uint> clientIds;
+        private Dictionary<uint, PlayerData> players;
         private uint nextPlayerId = 1; // player ids start at 1, the client treats itself as 0
 
         public void InitializeServer()
         {
+            clientIds = new Dictionary<IPEndPoint, uint>();
+            players = new Dictionary<uint, PlayerData>();
             logFilePath = Path.Combine(Application.persistentDataPath, "server_logs.txt");
             LogToFile("=== UDP Server Started ===");
 
@@ -83,6 +86,9 @@ namespace Networks
                             {
                                 playerId = nextPlayerId++;
                                 clientIds[sender] = playerId;
+                                PlayerData newPlayer = new PlayerData();
+                                players.Add(playerId, newPlayer);
+                                
                                 LogToFile($"Registered new client {sender} with PlayerID {playerId}");
                                 SendPlayerId(sender, playerId);
                                 SendKeyframe(new IPEndPoint[] {sender});

@@ -177,12 +177,23 @@ namespace Networks
         {
             if (!Connected || udpClient == null) return;
 
-            String payloadString = $"Rolling:{data.mRolling}," +
-                                   $"Facing:{data.mFacingDirection}," +
-                                   $"Atk:{data.isAttacking}," +
-                                   $"X:{data.xPos}," +
-                                   $"Y:{data.yPos}";
-            byte[] payload = Encoding.ASCII.GetBytes(payloadString);
+            StringBuilder sb = new StringBuilder();
+
+            if (data.rollingChanged)
+                sb.Append($"Rolling:{data.mRolling},");
+            if (data.mFacingDirection != 0)
+                sb.Append($"Facing:{data.mFacingDirection},");
+            if (data.attackingChanged)
+                sb.Append($"Atk:{data.isAttacking},");
+            if (data.xPos != 0)
+                sb.Append($"X:{data.xPos},");
+            if (data.yPos != 0)
+                sb.Append($"Y:{data.yPos},");
+
+            // Remove the trailing comma if present
+            if (sb.Length > 0)
+                sb.Length--;
+            byte[] payload = Encoding.ASCII.GetBytes(sb.ToString());
             
             NetPacket packet = new NetPacket
             {
