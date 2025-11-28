@@ -6,20 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/ClientScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/ClientScene.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/ServerScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/ServerScene.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/Managed/Assembly-CSharp.dll" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/Managed/Assembly-CSharp.dll" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/RuntimeInitializeOnLoads.json" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/RuntimeInitializeOnLoads.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/boot.config" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/boot.config" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/globalgamemanagers" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/globalgamemanagers" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/globalgamemanagers.assets" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/globalgamemanagers.assets" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/level0" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/level0" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/resources.assets" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/resources.assets" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/sharedassets0.assets" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/sharedassets0.assets" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/EditorBuildSettings.asset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -167,7 +153,9 @@
       <workItem from="1762327925021" duration="16127000" />
       <workItem from="1762352921715" duration="12840000" />
       <workItem from="1762388886329" duration="79000" />
-      <workItem from="1762433904815" duration="1844000" />
+      <workItem from="1762433904815" duration="3366000" />
+      <workItem from="1762460604129" duration="82000" />
+      <workItem from="1763752013730" duration="2182000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -329,7 +317,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762365384257</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="Added test scripts to run the server and client">
+      <option name="closed" value="true" />
+      <created>1762436811810</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1762436811810</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -376,7 +372,8 @@
     <MESSAGE value="Implemented snapshots and keyframes" />
     <MESSAGE value="Yay now they talk together :D" />
     <MESSAGE value="Working!!!" />
-    <option name="LAST_COMMIT_MESSAGE" value="Working!!!" />
+    <MESSAGE value="Added test scripts to run the server and client" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added test scripts to run the server and client" />
   </component>
   <component name="XDebuggerManager">
     <pin-to-top-manager>

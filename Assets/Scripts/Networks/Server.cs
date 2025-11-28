@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -38,7 +39,6 @@ namespace Networks
             try
             {
                 udpServer = new UdpClient(Port);
-                Debug.Log($"UDP Server started on port {Port}");
                 LogToFile($"Server listening on UDP port {Port}");
 
                 IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
@@ -53,13 +53,11 @@ namespace Networks
             {
                 if (IsRunning)
                 {
-                    Debug.LogError("Socket error: " + se.Message);
                     LogToFile("Socket error: " + se.Message);
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError("Server error: " + e.Message);
                 LogToFile("Server error: " + e.Message);
             }
             finally
@@ -85,10 +83,9 @@ namespace Networks
                             {
                                 playerId = nextPlayerId++;
                                 clientIds[sender] = playerId;
-                                Debug.Log($"Registered new client {sender} with PlayerID {playerId}");
                                 LogToFile($"Registered new client {sender} with PlayerID {playerId}");
                                 SendPlayerId(sender, playerId);
-                                SendKeyframe(sender);
+                                SendKeyframe(new IPEndPoint[] {sender});
                             }
                         }
                         else // Terminated the connection
@@ -96,74 +93,64 @@ namespace Networks
                             //todo implement
                         }
                         break;
+                    case (MessageType.SNAPSHOT):
+                        string payload = Encoding.ASCII.GetString(packet.payload);
+                        PlayerData playerData = PlayerData.DeltaDataDecoder(payload);
+                        // todo: handle playerData
+                        break;
                     default:
                         break;
                 }
-
-                clientIds.TryGetValue(sender, out uint id);
-                byte[] idBytes = Encoding.ASCII.GetBytes($"ID:{id}/"); // convert string to bytes
-                byte[] newPayload = new byte[idBytes.Length + packet.payload.Length];
-
-                // copy ID bytes first
-                Buffer.BlockCopy(idBytes, 0, newPayload, 0, idBytes.Length);
-
-                // copy the original payload after
-                Buffer.BlockCopy(packet.payload, 0, newPayload, idBytes.Length, packet.payload.Length);
-
-                // assign back to packet.payload
-                packet.payload = newPayload;
-                packet.payloadLength = (ushort)newPayload.Length;
-
-                // Broadcast to all other clients
-                BroadcastToClients(packet.ToBytes(), sender);
             }
             catch (Exception e)
             {
-                Debug.LogError("Packet handling error: " + e.Message);
                 LogToFile("Packet handling error: " + e.Message);
             }
         }
 
-        private void SendKeyframe(IPEndPoint sender)
+        private void SendKeyframe(IPEndPoint[] receivers)
         {
-            if (GameManager.Instance == null) return;
-            if (clientIds.TryGetValue(sender, out uint playerId))
-            {
-                if (GameManager.Instance.Players.TryGetValue(playerId, out GameObject player))
-                {
-                    if (GameManager.Instance.player.Equals(player)) return;
-                }
-            }
-
+            var result = clientIds.
+                Where(kvps => receivers.Contains(kvps.Key))
+                .ToList();
             var sb = new StringBuilder();
 
-            foreach (KeyValuePair<IPEndPoint, uint> clientId in clientIds)
+            foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
             {
-                if (!GameManager.Instance.Players.TryGetValue(clientId.Value, out GameObject player))
-                {
-                    UnityMainThreadDispatcher.Instance().Enqueue(() =>
-                    {
-                        player = new GameObject();
-                        player.transform.position = new Vector3(3, 3, 1); // default coordinates for player prefab
-                    });
-                }
+                // if (!GameManager.Instance.Players.TryGetValue(clientId.Value, out Player player))
+                // {
+                //     UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                //     {
+                //         player = new Player();
+                //         player.transform.position = new Vector3(3, 3, 1); // default coordinates for player prefab
+                //     });
+                // } //todo: fix
                 
-                // If it's the sender, mark as 0; otherwise use the player's ID
+                
+                /*
+                 * Form: id:x,y;....;id:x,y
+                 * 
+                 * Example with 2 players
+                 * Player 1 position = 3.5,5.6
+                 * Player 2 position = 2.1,3.8
+                 * 
+                 * payload: 1:3.5,5.6;2:2.1,3.8
+                */
+                
                 sb.Append(clientId.Value.ToString());
 
                 // Append positions using InvariantCulture to use a standard form across all devices
                 Vector3 pos = Vector3.zero;
-                UnityMainThreadDispatcher.Instance().Enqueue(() =>
-                {
-                    pos = player.transform.position;
-                });
+                // UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                // {
+                //     pos = player.transform.position;
+                // });
+                
                 sb.Append(':')
                     .Append(pos.x.ToString(CultureInfo.InvariantCulture))
-                    .Append(':')
+                    .Append(',')
                     .Append(pos.y.ToString(CultureInfo.InvariantCulture))
-                    .Append(':')
-                    .Append(pos.z.ToString(CultureInfo.InvariantCulture))
-                    .Append('\n');
+                    .Append(';');
             }
 
             string payload = sb.ToString();
@@ -179,7 +166,11 @@ namespace Networks
                 payloadLength = (ushort)payloadBytes.Length
             };
             byte[] data = packet.ToBytes();
-            udpServer.Send(data, data.Length, sender);
+
+            foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
+            {
+                udpServer.Send(data, data.Length, clientId.Key);  
+            }
         }
 
         private void BroadcastToClients(byte[] data, IPEndPoint sender = null)
@@ -224,7 +215,6 @@ namespace Networks
             udpServer?.Close();
             serverThread?.Join();
             LogToFile("=== UDP Server Stopped ===");
-            Debug.Log("UDP server stopped.");
         }
 
         private void LogToFile(string text)
@@ -233,6 +223,7 @@ namespace Networks
             {
                 string entry = $"[{DateTime.Now:HH:mm:ss}] {text}\n";
                 File.AppendAllText(logFilePath, entry);
+                Debug.Log(text); // For development
             }
             catch (Exception e)
             {

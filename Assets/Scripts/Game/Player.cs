@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Game;
+using UnityEngine;
 
 public class Player : MonoBehaviour
 {
@@ -15,18 +16,20 @@ public class Player : MonoBehaviour
 
     private bool mIsWallSliding;
     private bool mGrounded;
-    private bool mRolling;
-    private int mFacingDirection = 1;
-    private int mCurrentAttack;
-    private float mTimeSinceAttack;
+    
     private float mDelayToIdle;
     private float mRollCurrentTime;
     private readonly float mRollDuration = 8f / 14f; // ~0.57s
 
-    public bool isPlayer = false;
+    private PlayerData lastSentData;
+    private PlayerData currentData;
+    private Vector3 lastSendPos;
     
-    private void Start()
+    public bool isPlayer = false;    
+    public void Initialize()
     {
+        lastSentData = new PlayerData();
+        currentData = new PlayerData();
         mAnimator = GetComponent<Animator>();
         mBody2d = GetComponent<Rigidbody2D>();
         mGroundSensor = transform.Find("GroundSensor").GetComponent<Sensor_HeroKnight>();
@@ -43,14 +46,14 @@ public class Player : MonoBehaviour
 
     private void HandleTimers()
     {
-        mTimeSinceAttack += Time.deltaTime;
+        currentData.mTimeSinceAttack += Time.deltaTime;
 
-        if (mRolling)
+        if (currentData.mRolling)
         {
             mRollCurrentTime += Time.deltaTime;
             if (mRollCurrentTime >= mRollDuration)
             {
-                mRolling = false;
+                currentData.mRolling = false;
                 mRollCurrentTime = 0f;
             }
         }
@@ -82,12 +85,12 @@ public class Player : MonoBehaviour
         if (inputX > 0)
         {
             GetComponent<SpriteRenderer>().flipX = false;
-            mFacingDirection = 1;
+            currentData.mFacingDirection = 1;
         }
         else if (inputX < 0)
         {
             GetComponent<SpriteRenderer>().flipX = true;
-            mFacingDirection = -1;
+            currentData.mFacingDirection = -1;
         }
 
         if (inputY < 0 && mBody2d.velocity.y > 0)
@@ -96,29 +99,29 @@ public class Player : MonoBehaviour
         }
 
         // Movement (disabled while rolling)
-        if (!mRolling)
+        if (!currentData.mRolling)
             mBody2d.velocity = new Vector2(inputX * mSpeed, mBody2d.velocity.y);
 
         // Roll
-        if (Input.GetKeyDown(KeyCode.LeftShift) && !mRolling && !mIsWallSliding)
+        if (Input.GetKeyDown(KeyCode.LeftShift) && !currentData.mRolling && !mIsWallSliding)
         {
             StartRoll();
         }
 
         // Jump
-        else if (Input.GetKeyDown(KeyCode.Space) && mGrounded && !mRolling)
+        else if (Input.GetKeyDown(KeyCode.Space) && mGrounded && !currentData.mRolling)
         {
             Jump();
         }
 
         // Attack
-        else if (Input.GetMouseButtonDown(0) && mTimeSinceAttack > 0.25f && !mRolling)
+        else if (Input.GetMouseButtonDown(0) && currentData.mTimeSinceAttack > 0.25f && !currentData.mRolling)
         {
             Attack();
         }
 
         // Block
-        else if (Input.GetMouseButtonDown(1) && !mRolling)
+        else if (Input.GetMouseButtonDown(1) && !currentData.mRolling)
         {
             mAnimator.SetTrigger("Block");
             mAnimator.SetBool("IdleBlock", true);
@@ -129,9 +132,9 @@ public class Player : MonoBehaviour
         }
 
         // Hurt / Death
-        else if (Input.GetKeyDown(KeyCode.Q) && !mRolling)
+        else if (Input.GetKeyDown(KeyCode.Q) && !currentData.mRolling)
             mAnimator.SetTrigger("Hurt");
-        else if (Input.GetKeyDown(KeyCode.E) && !mRolling)
+        else if (Input.GetKeyDown(KeyCode.E) && !currentData.mRolling)
         {
             mAnimator.SetTrigger("Death");
         }
@@ -152,10 +155,10 @@ public class Player : MonoBehaviour
 
     private void StartRoll()
     {
-        mRolling = true;
+        currentData.mRolling = true;
         mRollCurrentTime = 0f;
         mAnimator.SetTrigger("Roll");
-        mBody2d.velocity = new Vector2(mFacingDirection * mRollForce, mBody2d.velocity.y);
+        mBody2d.velocity = new Vector2(currentData.mFacingDirection * mRollForce, mBody2d.velocity.y);
     }
 
     private void Jump()
@@ -175,12 +178,12 @@ public class Player : MonoBehaviour
 
     private void Attack()
     {
-        mCurrentAttack++;
-        if (mCurrentAttack > 3) mCurrentAttack = 1;
-        if (mTimeSinceAttack > 1.0f) mCurrentAttack = 1;
+        currentData.mCurrentAttack++;
+        if (currentData.mCurrentAttack > 3) currentData.mCurrentAttack = 1;
+        if (currentData.mTimeSinceAttack > 1.0f) currentData.mCurrentAttack = 1;
 
-        mAnimator.SetTrigger("Attack" + mCurrentAttack);
-        mTimeSinceAttack = 0.0f;
+        mAnimator.SetTrigger("Attack" + currentData.mCurrentAttack);
+        currentData.mTimeSinceAttack = 0.0f;
     }
 
     private void ApplyVariableGravity()
@@ -204,5 +207,15 @@ public class Player : MonoBehaviour
     {
         mAnimator.SetBool("WallSlide", mIsWallSliding);
         mAnimator.SetFloat("AirSpeedY", mBody2d.velocity.y);
+    }
+
+    public PlayerData GetDeltaData()
+    {
+        currentData.xPos = mBody2d.position.x;
+        currentData.yPos = mBody2d.position.y;
+        
+        PlayerData deltaData = PlayerData.SubtractData(currentData, lastSentData);
+        lastSentData.CopyData(currentData);
+        return deltaData;
     }
 }

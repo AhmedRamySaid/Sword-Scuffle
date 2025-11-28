@@ -44,10 +44,8 @@ namespace Networks
                 serverEndPoint = new IPEndPoint(IPAddress.Parse(serverIP), Port);
                 udpClient = new UdpClient();
                 udpClient.Connect(serverEndPoint);
-
-                Debug.Log("UDP Client ready.");
+                
                 LogToFile("UDP Client initialized and ready.");
-
                 Connected = true;
 
                 // Start receiving thread
@@ -57,7 +55,6 @@ namespace Networks
             }
             catch (Exception e)
             {
-                Debug.LogError("Client error: " + e.Message);
                 LogToFile("Client error: " + e.Message);
             }
         }
@@ -80,13 +77,11 @@ namespace Networks
             {
                 if (Connected)
                 {
-                    Debug.LogError("UDP receive error: " + se.Message);
                     LogToFile("UDP receive error: " + se.Message);
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError("Receive error: " + e.Message);
                 LogToFile("Receive error: " + e.Message);
             }
         }
@@ -147,35 +142,7 @@ namespace Networks
                     }
                     break;
                 case MessageType.KEYFRAME:
-                    string[] lines = payloadStr.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    foreach (string line in lines)
-                    {
-                        string[] keyframeParts = line.Split(':');
-                        if (keyframeParts.Length != 4)
-                        {
-                            LogToFile("Invalid line in keyframe payload: " + line);
-                            continue;
-                        }
-
-                        // Parse ID and coordinates
-                        if (!uint.TryParse(keyframeParts[0], out uint keyframeId)) continue;
-                        if (!float.TryParse(keyframeParts[1], System.Globalization.NumberStyles.Float,
-                                System.Globalization.CultureInfo.InvariantCulture, out float xCor)) continue;
-                        if (!float.TryParse(keyframeParts[2], System.Globalization.NumberStyles.Float,
-                                System.Globalization.CultureInfo.InvariantCulture, out float yCor)) continue;
-                        if (!float.TryParse(keyframeParts[3], System.Globalization.NumberStyles.Float,
-                                System.Globalization.CultureInfo.InvariantCulture, out float zCor)) continue;
-
-                        Vector3 position = new Vector3(xCor, yCor, zCor);
-
-                        // Apply position to your player object
-                        // Ensure this runs on the main thread if using Unity
-                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
-                        {
-                            GameManager.Instance.ApplyMovement(keyframeId, position);
-                        });
-                    }
+                    LogToFile("Invalid line in keyframe payload: " + payloadStr);
                     break;
                 case MessageType.ID_SET:
                     if (uint.TryParse(payloadStr, out uint playerId))
@@ -195,6 +162,39 @@ namespace Networks
 
             byte[] data = Encoding.UTF8.GetBytes(message);
             udpClient.Send(data, data.Length);
+        }
+
+        /*
+         * Form: Rolling:{boolean},
+         * Facing:{boolean},
+         * Atk:{boolean},
+         * X:{float},
+         * Y:{float}
+         *
+         * The line breaks are purely visual and are not present within the packet
+         */
+        public void SendDeltaData(PlayerData data)
+        {
+            if (!Connected || udpClient == null) return;
+
+            String payloadString = $"Rolling:{data.mRolling}," +
+                                   $"Facing:{data.mFacingDirection}," +
+                                   $"Atk:{data.isAttacking}," +
+                                   $"X:{data.xPos}," +
+                                   $"Y:{data.yPos}";
+            byte[] payload = Encoding.ASCII.GetBytes(payloadString);
+            
+            NetPacket packet = new NetPacket
+            {
+                msgType = MessageType.SNAPSHOT,
+                snapshotId = 0,
+                seqNum = nextSeqNum++,
+                serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                payload = payload,
+                payloadLength = (ushort)payload.Length
+            };
+            byte[] packetBytes = packet.ToBytes();
+            udpClient.Send(packetBytes, packetBytes.Length);
         }
 
         public void SendMovement(Vector3 delta)
@@ -233,8 +233,7 @@ namespace Networks
 
             byte[] data = packet.ToBytes();
             udpClient.Send(data, data.Length);
-
-            Debug.Log($"[UDP] Sent connection packet ({data.Length} bytes)");
+            
             LogToFile($"[Sent Connection] seqNum={packet.seqNum}, len={data.Length}");
         }
 
@@ -244,7 +243,6 @@ namespace Networks
             udpClient?.Close();
             receiveThread?.Join();
             LogToFile("=== UDP Client Stopped ===");
-            Debug.Log("UDP client stopped.");
         }
 
         private void LogToFile(string text)
@@ -253,6 +251,7 @@ namespace Networks
             {
                 string entry = $"[{DateTime.Now:HH:mm:ss}] {text}\n";
                 File.AppendAllText(logFilePath, entry);
+                Debug.Log(text);
             }
             catch (Exception e)
             {
