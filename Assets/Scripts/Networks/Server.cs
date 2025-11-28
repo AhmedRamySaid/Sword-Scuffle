@@ -101,8 +101,9 @@ namespace Networks
                         break;
                     case (MessageType.SNAPSHOT):
                         string payload = Encoding.ASCII.GetString(packet.payload);
-                        PlayerData playerData = PlayerData.DeltaDataDecoder(payload);
-                        // todo: handle playerData
+                        PlayerData deltaData = PlayerData.DeltaDataDecoder(payload);
+                        PlayerData playerData = players[clientIds[sender]];
+                        playerData.Add(deltaData);
                         break;
                     default:
                         break;

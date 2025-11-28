@@ -6,7 +6,7 @@
         public bool isAttacking;
         public int mFacingDirection;
         public int mCurrentAttack;
-        public float mTimeSinceAttack;
+        public float mTimeSinceAttack; //todo: implement
         public float xPos;
         public float yPos;
 
@@ -31,6 +31,16 @@
             yPos = playerData.yPos;
         }
 
+        public void Add(PlayerData playerData)
+        {
+            xPos += playerData.xPos;
+            yPos += playerData.yPos;
+            
+            if (playerData.rollingChanged) mRolling = playerData.mRolling;
+            if (playerData.attackingChanged) isAttacking = playerData.isAttacking;
+            if (playerData.mFacingDirection != 0) mFacingDirection = playerData.mFacingDirection;
+        }
+        
         public static PlayerData SubtractData(PlayerData newData, PlayerData oldData)
         {
             PlayerData deltaData = new PlayerData();
@@ -72,12 +82,14 @@
                 {
                     case "Rolling":
                         newData.mRolling = bool.Parse(value);
+                        newData.rollingChanged = true;
                         break;
                     case "Facing":
                         newData.mFacingDirection = int.Parse(value);
                         break;
                     case "Atk":
                         newData.isAttacking = bool.Parse(value);
+                        newData.attackingChanged = true;
                         break;
                     case "X":
                         newData.xPos = float.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
