@@ -4,18 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="">
+    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="Server and client now apply movement and rolling data">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/Player.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Player.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/PlayerData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/PlayerData.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/Managed/Assembly-CSharp.dll" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/Managed/Assembly-CSharp.dll" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/boot.config" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/boot.config" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/globalgamemanagers" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/globalgamemanagers" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/globalgamemanagers.assets" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/globalgamemanagers.assets" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/level0" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/level0" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/sharedassets0.assets" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/sharedassets0.assets" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -184,7 +181,7 @@
       <workItem from="1763752013730" duration="2182000" />
       <workItem from="1764328441745" duration="8897000" />
       <workItem from="1765284121664" duration="135000" />
-      <workItem from="1765378989426" duration="4779000" />
+      <workItem from="1765378989426" duration="6540000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -386,7 +383,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764337411294</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="Server and client now apply movement and rolling data">
+      <option name="closed" value="true" />
+      <created>1765383906031</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1765383906031</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -437,7 +442,8 @@
     <MESSAGE value="Implemented dealing with a player joining" />
     <MESSAGE value="Implemented handling of client keyframes" />
     <MESSAGE value="Fixed keyframes sent by server" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed keyframes sent by server" />
+    <MESSAGE value="Server and client now apply movement and rolling data" />
+    <option name="LAST_COMMIT_MESSAGE" value="Server and client now apply movement and rolling data" />
   </component>
   <component name="XDebuggerManager">
     <pin-to-top-manager>
