@@ -12,14 +12,14 @@ namespace Game
         public bool isAttacking;
         public int mFacingDirection;
         public int mCurrentAttack;
-        public bool isBlocking; // NEW: track blocking
+        public bool isBlocking;
         public float mTimeSinceAttack;
         public float xPos;
         public float yPos;
 
         public bool rollingChanged;
         public bool attackingChanged;
-        public bool blockingChanged; // track block state changes
+        public bool blockingChanged;
         public uint id;
 
         public PlayerData()
