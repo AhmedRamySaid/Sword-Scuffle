@@ -54,11 +54,10 @@ namespace Game
         private async void StartGame()
         {
             Players = new Dictionary<uint, Player>();
-            GameObject obj = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
-            player = obj.GetComponent<Player>();
-            player.Initialize();
+
+            player = AddPlayer(0);
             player.isPlayer = true;
-            Players.Add(1, player);
+
             await SendMovement();
         }
 
@@ -88,11 +87,25 @@ namespace Game
             player.transform.position += deltaPos;
         }
 
+        public void ApplyPlayerData(PlayerData data)
+        {
+            if (Players.TryGetValue(data.id, out var p))
+            {
+                if (!p.Equals(player)) p.ApplyRealData(data);
+            }
+            else
+            {
+                p = AddPlayer(data.id);
+                p.ApplyRealData(data);
+            }
+        }
+
         public Player AddPlayer(uint id)
         {
             GameObject newPlayer = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
             Player p = newPlayer.GetComponent<Player>();
             Players.Add(id, p);
+            p.Initialize();
             return p;
         }
         
@@ -107,7 +120,7 @@ namespace Game
         
         public void ApplyClientId(uint id)
         {
-            Players.Remove(1);
+            Players.Remove(0);
             Players.Add(id, player);
         }
 

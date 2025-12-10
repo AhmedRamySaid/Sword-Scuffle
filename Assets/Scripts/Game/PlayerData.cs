@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Game
 {
@@ -14,6 +16,7 @@ namespace Game
 
         public bool rollingChanged;
         public bool attackingChanged;
+        public uint id;
 
         public PlayerData()
         {
@@ -148,6 +151,79 @@ namespace Game
             sb.Append($"Y:{yPos}");
             
             return sb.ToString();
+        }
+
+        public static PlayerData[] ParseRealData(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                throw new FormatException("PlayerData parsing failed: input string is null or empty.");
+
+            string[] blocks = input.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            List<PlayerData> players = new List<PlayerData>();
+
+            foreach (string block in blocks)
+            {
+                // Expect format: id|Rolling:...,Atk:...,Facing:...,X:...,Y:...
+                string[] idAndData = block.Split('|');
+                if (idAndData.Length != 2)
+                    throw new FormatException($"PlayerData block '{block}' is missing or has multiple '|' separators.");
+
+                PlayerData pd = new PlayerData();
+
+                // Parse ID section
+                if (!uint.TryParse(idAndData[0], out pd.id))
+                    throw new FormatException($"Invalid player ID '{idAndData[0]}' in block '{block}'.");
+
+                string[] pairs = idAndData[1].Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (string pair in pairs)
+                {
+                    string[] kv = pair.Split(':');
+                    if (kv.Length != 2)
+                        throw new FormatException($"Malformed key-value pair '{pair}' inside block '{block}'.");
+
+                    string key = kv[0];
+                    string value = kv[1];
+
+                    try
+                    {
+                        switch (key)
+                        {
+                            case "Rolling":
+                                pd.mRolling = bool.Parse(value);
+                                break;
+
+                            case "Atk":
+                                pd.isAttacking = bool.Parse(value);
+                                break;
+
+                            case "Facing":
+                                pd.mFacingDirection = int.Parse(value);
+                                break;
+
+                            case "X":
+                                pd.xPos = float.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+                                break;
+
+                            case "Y":
+                                pd.yPos = float.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+                                break;
+
+                            default:
+                                throw new FormatException($"Unknown key '{key}' in block '{block}'.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new FormatException(
+                            $"Invalid value '{value}' for key '{key}' in block '{block}'.", ex);
+                    }
+                }
+
+                players.Add(pd);
+            }
+
+            return players.ToArray();
         }
     }
 }

@@ -24,19 +24,26 @@ namespace Networks
         private Dictionary<IPEndPoint, uint> clientIds;
         private Dictionary<uint, PlayerData> players;
         private uint nextPlayerId = 1; // player ids start at 1, the client treats itself as 0
+        
+        public int KeyframeRateHz = 20;
+        private Thread keyframeThread;
 
         public void InitializeServer()
         {
             clientIds = new Dictionary<IPEndPoint, uint>();
             players = new Dictionary<uint, PlayerData>();
             logFilePath = Path.Combine(Application.persistentDataPath, "server_logs.txt");
+            
             LogToFile("=== UDP Server Started ===");
 
             IsRunning = true;
             serverThread = new Thread(StartServer);
             serverThread.Start();
+            
+            keyframeThread = new Thread(KeyframeLoop);
+            keyframeThread.Start();
         }
-
+        
         private void StartServer()
         {
             try
@@ -70,6 +77,26 @@ namespace Networks
             }
         }
 
+        private void KeyframeLoop()
+        {
+            int delayMs = (int)(1000f / KeyframeRateHz);
+
+            while (IsRunning)
+            {
+                try
+                {
+                    // Send to ALL clients
+                    SendKeyframe(clientIds.Keys.ToArray());
+                }
+                catch (Exception e)
+                {
+                    LogToFile("Keyframe loop error: " + e.Message);
+                }
+
+                Thread.Sleep(delayMs);
+            }
+        }
+        
         private void HandlePacket(byte[] data, IPEndPoint sender)
         {
             try
@@ -91,6 +118,11 @@ namespace Networks
                                 
                                 LogToFile($"Registered new client {sender} with PlayerID {playerId}");
                                 SendPlayerId(sender, playerId);
+                                
+                                var others = clientIds.Keys
+                                    .Where(ep => !ep.Equals(sender))
+                                    .ToList();
+                                SendJoinMessage(others,playerId, true);
                                 SendKeyframe(new IPEndPoint[] {sender});
                             }
                         }
@@ -115,6 +147,29 @@ namespace Networks
             }
         }
 
+        private void SendJoinMessage(List<IPEndPoint> receivers, uint playerId, bool flag)
+        {
+            int joined = flag ? 1 : 0;
+            string payload = "ID:" + playerId.ToString() + "/" + joined.ToString();
+            byte[] payloadBytes = Encoding.ASCII.GetBytes(payload);
+            
+            NetPacket packet = new NetPacket
+            {
+                msgType = MessageType.CONNECT,
+                snapshotId = 0,
+                seqNum = 0,
+                serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                payload = payloadBytes,
+                payloadLength = (ushort)payloadBytes.Length
+            };
+            byte[] data = packet.ToBytes();
+
+            foreach (IPEndPoint clientId in receivers)
+            {
+                udpServer.Send(data, data.Length, clientId);  
+            }
+        }
+
         /*
          * Different clients are seperated by a ';'
          */
@@ -125,9 +180,10 @@ namespace Networks
                 .ToList();
             var sb = new StringBuilder();
 
-            foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
+            foreach (KeyValuePair<IPEndPoint, uint> clientId in clientIds)
             {
                 PlayerData playerData = players[clientId.Value];
+                sb.Append(clientId.Value + "|");
                 sb.Append(playerData.ToRealString());
                 sb.Append(';');
             }

@@ -218,4 +218,34 @@ public class Player : MonoBehaviour
         lastSentData.CopyData(currentData);
         return deltaData;
     }
+
+    public void ApplyRealData(PlayerData data)
+    {
+        // Update facing direction
+        if (data.mFacingDirection != 0 && data.mFacingDirection != currentData.mFacingDirection)
+        {
+            currentData.mFacingDirection = data.mFacingDirection;
+            GetComponent<SpriteRenderer>().flipX = currentData.mFacingDirection < 0;
+        }
+
+        // Handle rolling
+        if (data.mRolling && !currentData.mRolling)
+        {
+            // Start rolling animation for remote player
+            mAnimator.SetTrigger("Roll");
+        }
+        currentData.mRolling = data.mRolling;
+
+        // Update attack
+        if (data.isAttacking && !currentData.isAttacking)
+        {
+            int attackNumber = data.mCurrentAttack;
+            mAnimator.SetTrigger("Attack" + attackNumber);
+        }
+        currentData.isAttacking = data.isAttacking;
+        currentData.mCurrentAttack = data.mCurrentAttack;
+
+        // Update position (you can also LERP for smooth movement)
+        mBody2d.position = new Vector2(data.xPos, data.yPos);
+    }
 }

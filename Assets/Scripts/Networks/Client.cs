@@ -142,7 +142,22 @@ namespace Networks
                     }
                     break;
                 case MessageType.KEYFRAME:
-                    LogToFile("Invalid line in keyframe payload: " + payloadStr);
+                    try
+                    {
+                        PlayerData[] realData = PlayerData.ParseRealData(payloadStr);
+                        foreach (PlayerData data in realData)
+                        {
+                            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                            {
+                                GameManager.Instance.ApplyPlayerData(data);
+                            });
+                        }
+                    }
+                    catch (FormatException e)
+                    {
+                        LogToFile("Invalid line in keyframe payload: " + payloadStr);
+                        LogToFile("Exception: " + e);
+                    }
                     break;
                 case MessageType.ID_SET:
                     if (uint.TryParse(payloadStr, out uint playerId))
