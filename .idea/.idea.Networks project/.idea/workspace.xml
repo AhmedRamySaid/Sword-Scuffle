@@ -4,15 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="Server and client now apply movement and rolling data">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/Player.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Player.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/PlayerData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/PlayerData.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/Managed/Assembly-CSharp.dll" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/Managed/Assembly-CSharp.dll" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/boot.config" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/boot.config" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/globalgamemanagers" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/globalgamemanagers" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/globalgamemanagers.assets" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/globalgamemanagers.assets" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/sharedassets0.assets" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/sharedassets0.assets" afterDir="false" />
+    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="Basic comment refactoring">
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -181,7 +174,7 @@
       <workItem from="1763752013730" duration="2182000" />
       <workItem from="1764328441745" duration="8897000" />
       <workItem from="1765284121664" duration="135000" />
-      <workItem from="1765378989426" duration="6540000" />
+      <workItem from="1765378989426" duration="6863000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -391,7 +384,23 @@
       <option name="project" value="LOCAL" />
       <updated>1765383906031</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="Now blocking and attacking works">
+      <option name="closed" value="true" />
+      <created>1765385727242</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1765385727242</updated>
+    </task>
+    <task id="LOCAL-00028" summary="Basic comment refactoring">
+      <option name="closed" value="true" />
+      <created>1765385835551</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1765385835551</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -418,8 +427,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
-    <MESSAGE value="First commit" />
-    <MESSAGE value="Added main menu" />
     <MESSAGE value="Updated the colors in the main menu" />
     <MESSAGE value="Changed colors (again)" />
     <MESSAGE value="Changed code so that it uses canvas inside the unity editor" />
@@ -443,7 +450,9 @@
     <MESSAGE value="Implemented handling of client keyframes" />
     <MESSAGE value="Fixed keyframes sent by server" />
     <MESSAGE value="Server and client now apply movement and rolling data" />
-    <option name="LAST_COMMIT_MESSAGE" value="Server and client now apply movement and rolling data" />
+    <MESSAGE value="Now blocking and attacking works" />
+    <MESSAGE value="Basic comment refactoring" />
+    <option name="LAST_COMMIT_MESSAGE" value="Basic comment refactoring" />
   </component>
   <component name="XDebuggerManager">
     <pin-to-top-manager>

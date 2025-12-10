@@ -127,6 +127,7 @@ namespace Game
         private void OnApplicationQuit()
         {
             if (server != null) server.StopServer();
+            if (localClient != null) localClient.StopClient();
         }
     }
 }
