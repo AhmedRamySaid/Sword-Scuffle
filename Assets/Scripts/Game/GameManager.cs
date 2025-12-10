@@ -10,8 +10,8 @@ namespace Game
     {
         public static GameManager Instance;
         public GameObject playerPrefab;
-        public Dictionary<uint, GameObject> Players;
-        public GameObject player;
+        public Dictionary<uint, Player> Players;
+        public Player player;
         
         private Server server;
         private Client localClient;
@@ -53,29 +53,27 @@ namespace Game
         
         private async void StartGame()
         {
-            Players = new Dictionary<uint, GameObject>();
-            player = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
-            lastSentPosition = player.transform.position;
-            Players.Add(1, player);
-            player.GetComponent<Player>().isPlayer = true;
+            Players = new Dictionary<uint, Player>();
+
+            player = AddPlayer(0);
+            player.isPlayer = true;
+
             await SendMovement();
         }
 
         private async Task SendMovement()
         {
-            while (localClient.Connected)   
+            while (localClient.Connected)
             {
-                Vector3 currentPos = player.transform.position;
-                Vector3 deltaPos = currentPos - lastSentPosition;
-                lastSentPosition = currentPos;
-                await Task.Run(() => localClient.SendMovement(deltaPos));
+                PlayerData deltaData = player.GetDeltaData();
+                await Task.Run(() => localClient.SendDeltaData(deltaData));
                 await Task.Delay((int)(SendInterval * 1000));
             }
         }
 
         public void ApplyMovement(uint id, Vector3 position)
         {
-            if (!Players.TryGetValue(id, out GameObject p))
+            if (!Players.TryGetValue(id, out Player p))
             {
                 p = AddPlayer(id);
             }
@@ -85,20 +83,35 @@ namespace Game
         public void ApplyDeltaMovement(uint id, Vector3 deltaPos)
         {
             //todo: change
-            GameObject player = Players[id];
+            Player player = Players[id];
             player.transform.position += deltaPos;
         }
 
-        public GameObject AddPlayer(uint id)
+        public void ApplyPlayerData(PlayerData data)
+        {
+            if (Players.TryGetValue(data.id, out var p))
+            {
+                if (!p.Equals(player)) p.ApplyRealData(data);
+            }
+            else
+            {
+                p = AddPlayer(data.id);
+                p.ApplyRealData(data);
+            }
+        }
+
+        public Player AddPlayer(uint id)
         {
             GameObject newPlayer = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
-            Players.Add(id, newPlayer);
-            return newPlayer;
+            Player p = newPlayer.GetComponent<Player>();
+            Players.Add(id, p);
+            p.Initialize();
+            return p;
         }
         
         public void RemovePlayer(uint id)
         {
-            if (Players.TryGetValue(id, out GameObject value))
+            if (Players.TryGetValue(id, out Player value))
             {
                 Players.Remove(id);
                 Destroy(value);
@@ -107,13 +120,14 @@ namespace Game
         
         public void ApplyClientId(uint id)
         {
-            Players.Remove(1);
+            Players.Remove(0);
             Players.Add(id, player);
         }
 
         private void OnApplicationQuit()
         {
             if (server != null) server.StopServer();
+            if (localClient != null) localClient.StopClient();
         }
     }
 }
