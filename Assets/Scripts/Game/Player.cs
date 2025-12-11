@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Game
 {
@@ -27,6 +28,7 @@ namespace Game
         private Collider2D leftSwordHitbox;
         private Collider2D rightSwordHitbox;
         private SpriteRenderer spriteRenderer;
+        private List<Player> hitPlayers;
         
         public bool isPlayer = false;
 
@@ -56,6 +58,8 @@ namespace Game
             leftSwordHitbox = transform.Find("SwordHitboxLeft").GetComponent<Collider2D>();
             rightSwordHitbox = transform.Find("SwordHitboxRight").GetComponent<Collider2D>();
             spriteRenderer = GetComponent<SpriteRenderer>();
+            
+            hitPlayers = new List<Player>();
         }
 
         private void Update()
@@ -131,7 +135,7 @@ namespace Game
                 Jump();
 
             // Attack
-            else if (Input.GetMouseButtonDown(0) && currentData.mTimeSinceAttack > 0.25f && !currentData.mRolling)
+            else if (Input.GetMouseButtonDown(0) && currentData.mTimeSinceAttack > 0.429f && !currentData.mRolling)
                 Attack();
 
             // Block
@@ -187,8 +191,10 @@ namespace Game
 
         private void Attack()
         {
+            if (currentData.isAttacking) return;
+            
             currentData.mCurrentAttack++;
-            if (currentData.mCurrentAttack > 3) currentData.mCurrentAttack = 1;
+            if (currentData.mCurrentAttack > 2) currentData.mCurrentAttack = 1;
             if (currentData.mTimeSinceAttack > 1.0f) currentData.mCurrentAttack = 1;
 
             // Use cached hashes
@@ -196,7 +202,6 @@ namespace Game
             {
                 1 => HashAttack1,
                 2 => HashAttack2,
-                3 => HashAttack3,
                 _ => HashAttack1
             };
             mAnimator.SetTrigger(attackHash);
@@ -227,6 +232,7 @@ namespace Game
                 leftSwordHitbox.enabled = false;
                 rightSwordHitbox.enabled = false;
                 currentData.isAttacking = false;
+                hitPlayers.Clear();
                 return;
             }
 
@@ -249,6 +255,34 @@ namespace Game
             int dir = facingRight ? 1 : -1;
             spriteRenderer.flipX = !facingRight;
             currentData.mFacingDirection = dir;
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            // Check if the collider is a sword
+            if (other.CompareTag("Sword"))
+            {
+                bool gotHit = other.GetComponentInParent<Player>().AttackPlayer(this);
+
+                if (gotHit)
+                {
+                    Debug.Log("Hit another player");
+                    TakeDamage();
+                }
+            }
+        }
+
+        private bool AttackPlayer(Player player)
+        {
+            if (hitPlayers.Contains(player)) return false;
+
+            hitPlayers.Add(player);
+            return true;
+        }
+
+        private void TakeDamage()
+        {
+            mAnimator.SetTrigger(HashHurt);
         }
 
         public PlayerData GetDeltaData()

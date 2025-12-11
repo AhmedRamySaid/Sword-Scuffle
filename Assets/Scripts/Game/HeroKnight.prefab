@@ -332,7 +332,7 @@ GameObject:
   - component: {fileID: 3527945925287444340}
   m_Layer: 0
   m_Name: SwordHitboxRight
-  m_TagString: Untagged
+  m_TagString: Sword
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -399,7 +399,7 @@ GameObject:
   - component: {fileID: 3487398313794964447}
   m_Layer: 0
   m_Name: SwordHitboxLeft
-  m_TagString: Untagged
+  m_TagString: Sword
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
