@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Game
 {
@@ -24,6 +25,11 @@ namespace Game
         private PlayerData lastSentData;
         private PlayerData currentData;
 
+        private Collider2D leftSwordHitbox;
+        private Collider2D rightSwordHitbox;
+        private SpriteRenderer spriteRenderer;
+        private List<Player> hitPlayers;
+        
         public bool isPlayer = false;
 
         // Animator hashes
@@ -48,6 +54,12 @@ namespace Game
             mAnimator = GetComponent<Animator>();
             mBody2d = GetComponent<Rigidbody2D>();
             mGroundSensor = transform.Find("GroundSensor").GetComponent<Sensor_HeroKnight>();
+            
+            leftSwordHitbox = transform.Find("SwordHitboxLeft").GetComponent<Collider2D>();
+            rightSwordHitbox = transform.Find("SwordHitboxRight").GetComponent<Collider2D>();
+            spriteRenderer = GetComponent<SpriteRenderer>();
+            
+            hitPlayers = new List<Player>();
         }
 
         private void Update()
@@ -57,6 +69,7 @@ namespace Game
             HandleInput();
             ApplyVariableGravity();
             UpdateAnimator();
+            UpdateAttacking();
         }
 
         private void HandleTimers()
@@ -99,13 +112,11 @@ namespace Game
             // Flip sprite
             if (inputX > 0)
             {
-                GetComponent<SpriteRenderer>().flipX = false;
-                currentData.mFacingDirection = 1;
+                FlipX(true);
             }
             else if (inputX < 0)
             {
-                GetComponent<SpriteRenderer>().flipX = true;
-                currentData.mFacingDirection = -1;
+                FlipX(false);
             }
 
             if (inputY < 0 && mBody2d.velocity.y > 0)
@@ -124,7 +135,7 @@ namespace Game
                 Jump();
 
             // Attack
-            else if (Input.GetMouseButtonDown(0) && currentData.mTimeSinceAttack > 0.25f && !currentData.mRolling)
+            else if (Input.GetMouseButtonDown(0) && currentData.mTimeSinceAttack > 0.429f && !currentData.mRolling)
                 Attack();
 
             // Block
@@ -180,8 +191,10 @@ namespace Game
 
         private void Attack()
         {
+            if (currentData.isAttacking) return;
+            
             currentData.mCurrentAttack++;
-            if (currentData.mCurrentAttack > 3) currentData.mCurrentAttack = 1;
+            if (currentData.mCurrentAttack > 2) currentData.mCurrentAttack = 1;
             if (currentData.mTimeSinceAttack > 1.0f) currentData.mCurrentAttack = 1;
 
             // Use cached hashes
@@ -189,7 +202,6 @@ namespace Game
             {
                 1 => HashAttack1,
                 2 => HashAttack2,
-                3 => HashAttack3,
                 _ => HashAttack1
             };
             mAnimator.SetTrigger(attackHash);
@@ -208,10 +220,69 @@ namespace Game
             }
         }
 
+        private void UpdateAttacking()
+        {
+            AnimatorStateInfo state = mAnimator.GetCurrentAnimatorStateInfo(0);
+            bool attack = state.IsName("Attack1") || 
+                          state.IsName("Attack2") || 
+                          state.IsName("Attack3");
+
+            if (!attack)
+            {
+                leftSwordHitbox.enabled = false;
+                rightSwordHitbox.enabled = false;
+                currentData.isAttacking = false;
+                hitPlayers.Clear();
+                return;
+            }
+
+            if (currentData.mFacingDirection == 1)
+            {
+                rightSwordHitbox.enabled = true;
+                return;
+            }
+            leftSwordHitbox.enabled = true;
+        }
+
         private void UpdateAnimator()
         {
             mAnimator.SetBool(HashWallSlide, mIsWallSliding);
             mAnimator.SetFloat(HashAirSpeedY, mBody2d.velocity.y);
+        }
+
+        private void FlipX(bool facingRight)
+        {
+            int dir = facingRight ? 1 : -1;
+            spriteRenderer.flipX = !facingRight;
+            currentData.mFacingDirection = dir;
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            // Check if the collider is a sword
+            if (other.CompareTag("Sword"))
+            {
+                bool gotHit = other.GetComponentInParent<Player>().AttackPlayer(this);
+
+                if (gotHit)
+                {
+                    Debug.Log("Hit another player");
+                    TakeDamage();
+                }
+            }
+        }
+
+        private bool AttackPlayer(Player player)
+        {
+            if (hitPlayers.Contains(player)) return false;
+
+            hitPlayers.Add(player);
+            return true;
+        }
+
+        private void TakeDamage()
+        {
+            mAnimator.SetTrigger(HashHurt);
         }
 
         public PlayerData GetDeltaData()
@@ -228,8 +299,7 @@ namespace Game
             // Facing direction
             if (data.mFacingDirection != 0 && data.mFacingDirection != currentData.mFacingDirection)
             {
-                currentData.mFacingDirection = data.mFacingDirection;
-                GetComponent<SpriteRenderer>().flipX = currentData.mFacingDirection < 0;
+                FlipX(currentData.mFacingDirection > 0);
             }
 
             // Rolling
