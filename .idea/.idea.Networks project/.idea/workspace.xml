@@ -4,8 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="Basic comment refactoring">
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" afterDir="false" />
+    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/HeroKnight.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/HeroKnight.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/Player.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Player.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,7 +20,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="network" />
+        <entry key="$PROJECT_DIR$" value="refactoring" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -100,7 +102,7 @@
     &quot;Attach to Unity Editor.Attach to Unity Editor.executor&quot;: &quot;Debug&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;XThreadsFramesViewSplitterKey&quot;: &quot;0.14285715&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;refactoring&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Attacking&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -144,10 +146,10 @@
       </option>
       <method v="2" />
     </configuration>
-    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost" ignored-value-for-modified-check="9116">
+    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost" ignored-value-for-modified-check="7128">
       <option name="allowRunningInParallel" value="false" />
       <option name="listenPortForConnections" value="false" />
-      <option name="pid" value="9116" />
+      <option name="pid" value="7128" />
       <option name="projectPathOnTarget" />
       <option name="selectedOptions">
         <list />
@@ -174,7 +176,8 @@
       <workItem from="1763752013730" duration="2182000" />
       <workItem from="1764328441745" duration="8897000" />
       <workItem from="1765284121664" duration="135000" />
-      <workItem from="1765378989426" duration="6863000" />
+      <workItem from="1765378989426" duration="7221000" />
+      <workItem from="1765476414563" duration="3733000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -400,7 +403,15 @@
       <option name="project" value="LOCAL" />
       <updated>1765385835551</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="Closes client on application close">
+      <option name="closed" value="true" />
+      <created>1765386002688</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1765386002688</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -427,7 +438,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
-    <MESSAGE value="Updated the colors in the main menu" />
     <MESSAGE value="Changed colors (again)" />
     <MESSAGE value="Changed code so that it uses canvas inside the unity editor" />
     <MESSAGE value="Added assets from unity store" />
@@ -452,7 +462,8 @@
     <MESSAGE value="Server and client now apply movement and rolling data" />
     <MESSAGE value="Now blocking and attacking works" />
     <MESSAGE value="Basic comment refactoring" />
-    <option name="LAST_COMMIT_MESSAGE" value="Basic comment refactoring" />
+    <MESSAGE value="Closes client on application close" />
+    <option name="LAST_COMMIT_MESSAGE" value="Closes client on application close" />
   </component>
   <component name="XDebuggerManager">
     <pin-to-top-manager>
