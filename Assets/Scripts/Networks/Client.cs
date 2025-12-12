@@ -20,7 +20,8 @@ namespace Networks
         private const int Port = 5555;
         private string logFilePath;
         private uint nextSeqNum = 0;
-
+        private uint latestSnapshot = 0;
+            
         private IPEndPoint serverEndPoint;
 
         public Client(string serverIP)
@@ -118,6 +119,10 @@ namespace Networks
                     }
                     break;
                 case MessageType.SNAPSHOT:
+                    // Ignore older snapshots
+                    if (packet.snapshotId < latestSnapshot) return;
+                    latestSnapshot = packet.snapshotId;
+                    
                     string[] snapshotParts = payloadStr.Split(new char[] { ':', '/' }, StringSplitOptions.RemoveEmptyEntries);
                     uint snapshotPlayerId = uint.Parse(snapshotParts[1]);
                     

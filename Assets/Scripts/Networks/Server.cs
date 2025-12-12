@@ -25,7 +25,8 @@ namespace Networks
         private Dictionary<uint, PlayerData> players;
         private uint nextPlayerId = 1; // player ids start at 1, the client treats itself as 0
         
-        public int KeyframeRateHz = 20;
+        private readonly int keyframeRateHz = 20;
+        private uint nextSnapshotId = 0;
         private Thread keyframeThread;
 
         public void InitializeServer()
@@ -79,7 +80,7 @@ namespace Networks
 
         private void KeyframeLoop()
         {
-            int delayMs = (int)(1000f / KeyframeRateHz);
+            int delayMs = (int)(1000f / keyframeRateHz);
 
             while (IsRunning)
             {
@@ -198,7 +199,7 @@ namespace Networks
             NetPacket packet = new NetPacket
             {
                 msgType = MessageType.KEYFRAME,
-                snapshotId = 0,
+                snapshotId = nextSnapshotId++,
                 seqNum = 0,
                 serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 payload = payloadBytes,
