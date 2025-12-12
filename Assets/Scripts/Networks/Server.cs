@@ -165,6 +165,7 @@ namespace Networks
                     case (MessageType.KEYFRAME):
                         int latestKf = 0;
                         int packetKf = (int) packet.seqNum / KeyframeRateHz;
+                        LogToFile("Received keyframe:\n" + packet.ToString());
                         
                         if (latestSequences.TryGetValue(sender, out uint seqNumber))
                         {
@@ -327,6 +328,8 @@ namespace Networks
 
             if (isPeriodicalKeyframe) nextSnapshotId++;
             
+            LogToFile("Sent keyframe:\n" + packet.ToString());
+            
             foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
             {
                 udpServer.Send(data, data.Length, clientId.Key);  
@@ -383,7 +386,6 @@ namespace Networks
             {
                 string entry = $"[{DateTime.Now:HH:mm:ss}] {text}\n";
                 File.AppendAllText(logFilePath, entry);
-                Debug.Log(text); // For development
             }
             catch (Exception e)
             {
