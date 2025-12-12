@@ -60,6 +60,33 @@ namespace Networks
             }
         }
 
+        private void KeyframeLoop()
+        {
+            int delayMs = (int)(1000f / Server.KeyframeRateHz);
+
+            while (Connected)
+            {
+                try
+                {
+                    // Send delta data
+                    if (nextSeqNum % Server.KeyframeRateHz != 0) 
+                    {
+                        SendDeltaData(GameManager.Instance.player.GetDeltaData());
+                    }
+                    else // One second has Passed, send real data
+                    {
+                        SendRealData(GameManager.Instance.player.GetRealData());
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogToFile("Keyframe loop error: " + e.Message);
+                }
+
+                Thread.Sleep(delayMs);
+            }
+        }
+        
         void ReceiveData()
         {
             IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
@@ -119,8 +146,11 @@ namespace Networks
                     }
                     break;
                 case MessageType.SNAPSHOT:
-                    // Ignore older snapshots
-                    if (packet.snapshotId < latestSnapshot) return;
+                    int latestKf = (int) latestSnapshot % Server.KeyframeRateHz; // Get keyframe
+                    int packetKf = (int) packet.snapshotId % Server.KeyframeRateHz;
+                    
+                    if (packetKf < latestKf) return; // Part of an older keyframe
+                    
                     latestSnapshot = packet.snapshotId;
                     
                     string[] snapshotParts = payloadStr.Split(new char[] { ':', '/' }, StringSplitOptions.RemoveEmptyEntries);
@@ -147,6 +177,12 @@ namespace Networks
                     }
                     break;
                 case MessageType.KEYFRAME:
+                    int latestKeyframe = (int) latestSnapshot % Server.KeyframeRateHz; // Get keyframe
+                    int packetKeyframe = (int) packet.snapshotId % Server.KeyframeRateHz;
+                    
+                    if (packetKeyframe < latestKeyframe) return; // Part of an older keyframe
+                    
+                    latestSnapshot = packet.snapshotId;
                     try
                     {
                         PlayerData[] realData = PlayerData.ParseRealData(payloadStr);
@@ -184,7 +220,7 @@ namespace Networks
             udpClient.Send(data, data.Length);
         }
         
-        public void SendDeltaData(PlayerData data)
+        private void SendDeltaData(PlayerData data)
         {
             if (!Connected || udpClient == null) return;
             
@@ -193,7 +229,7 @@ namespace Networks
             NetPacket packet = new NetPacket
             {
                 msgType = MessageType.SNAPSHOT,
-                snapshotId = 0,
+                snapshotId = latestSnapshot,
                 seqNum = nextSeqNum++,
                 serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 payload = payload,
@@ -203,26 +239,26 @@ namespace Networks
             udpClient.Send(packetBytes, packetBytes.Length);
         }
 
-        public void SendMovement(Vector3 delta)
+        private void SendRealData(PlayerData data)
         {
             if (!Connected || udpClient == null) return;
-
-            byte[] payload = Encoding.ASCII.GetBytes($"{delta.x},{delta.y},{delta.z}");
+            
+            byte[] payload = Encoding.ASCII.GetBytes(data.ToRealString());
+            
             NetPacket packet = new NetPacket
             {
-                msgType = MessageType.SNAPSHOT,
-                snapshotId = 0,
+                msgType = MessageType.KEYFRAME,
+                snapshotId = latestSnapshot,
                 seqNum = nextSeqNum++,
                 serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 payload = payload,
                 payloadLength = (ushort)payload.Length
             };
-
-            byte[] data = packet.ToBytes();
-            udpClient.Send(data, data.Length);
+            byte[] packetBytes = packet.ToBytes();
+            udpClient.Send(packetBytes, packetBytes.Length);
         }
 
-        public void SendConnection(bool establishedConnection)
+        private void SendConnection(bool establishedConnection)
         {
             if (!Connected || udpClient == null) return;
 

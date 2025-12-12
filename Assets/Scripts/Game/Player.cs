@@ -293,6 +293,17 @@ namespace Game
             lastSentData.CopyData(currentData);
             return deltaData;
         }
+        
+        public PlayerData GetRealData()
+        {
+            currentData.xPos = mBody2d.position.x;
+            currentData.yPos = mBody2d.position.y;
+            lastSentData.CopyData(currentData);
+            
+            PlayerData realData = new PlayerData();
+            realData.CopyData(lastSentData);
+            return realData;
+        }
 
         public void ApplyRealData(PlayerData data)
         {

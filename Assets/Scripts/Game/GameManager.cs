@@ -57,18 +57,6 @@ namespace Game
 
             player = AddPlayer(0);
             player.isPlayer = true;
-
-            await SendMovement();
-        }
-
-        private async Task SendMovement()
-        {
-            while (localClient.Connected)
-            {
-                PlayerData deltaData = player.GetDeltaData();
-                await Task.Run(() => localClient.SendDeltaData(deltaData));
-                await Task.Delay((int)(SendInterval * 1000));
-            }
         }
 
         public void ApplyMovement(uint id, Vector3 position)
@@ -99,9 +87,11 @@ namespace Game
                 p.ApplyRealData(data);
             }
         }
-
+        
         public Player AddPlayer(uint id)
         {
+            if (Players.TryGetValue(id, out var pl)) return pl;
+            
             GameObject newPlayer = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
             Player p = newPlayer.GetComponent<Player>();
             Players.Add(id, p);

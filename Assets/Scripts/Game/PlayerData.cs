@@ -117,7 +117,7 @@ namespace Game
 
         public string ToRealString()
         {
-            return $"Rolling:{mRolling},Atk:{isAttacking},Block:{isBlocking},Facing:{mFacingDirection},X:{xPos},Y:{yPos}";
+            return $"{id}|Rolling:{mRolling},Atk:{isAttacking},Block:{isBlocking},Facing:{mFacingDirection},X:{xPos},Y:{yPos}";
         }
         
         public static PlayerData[] ParseRealData(string input)
