@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="Added sending snapshots server side">
+    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="Should now work across the same network">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/Player.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Player.cs" afterDir="false" />
@@ -49,6 +49,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/8f/75e29d71/Dictionary`2.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/f6/4d014b7f/ThrowHelper.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/fd/9814d66c/UInt32.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/5a41d6b7189842eca409fd0b1c3e3dcf17bf78/f6/f81c2272/String.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/f1e29a71158e46cdb750140a667aea01175e00/52/c8f618cf/MonoBehaviour.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Game/Player.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Game/PlayerData.cs" root0="FORCE_HIGHLIGHTING" />
@@ -183,7 +184,7 @@
       <workItem from="1765284121664" duration="135000" />
       <workItem from="1765378989426" duration="7221000" />
       <workItem from="1765476414563" duration="6753000" />
-      <workItem from="1765537073776" duration="9555000" />
+      <workItem from="1765537073776" duration="10356000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -449,7 +450,15 @@
       <option name="project" value="LOCAL" />
       <updated>1765541527470</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="Should now work across the same network">
+      <option name="closed" value="true" />
+      <created>1765547621386</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1765547621386</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -476,7 +485,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
-    <MESSAGE value="Added script for the character" />
     <MESSAGE value="Did changes in player script to make it feel better and added a game manager to spawn in the player" />
     <MESSAGE value="Now a server and a client get created" />
     <MESSAGE value="I am tired" />
@@ -501,39 +509,10 @@
     <MESSAGE value="Added attacking players" />
     <MESSAGE value="Client now ignores older snapshots" />
     <MESSAGE value="Added sending snapshots server side" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added sending snapshots server side" />
+    <MESSAGE value="Should now work across the same network" />
+    <option name="LAST_COMMIT_MESSAGE" value="Should now work across the same network" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="DotNet Breakpoints">
-          <url>file://$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs</url>
-          <line>203</line>
-          <properties documentPath="D:\My Stuff\Computer science\Projects\Networks project\Assets\Scripts\Networks\Client.cs" containingFunctionPresentation="Method 'ParsePayload'">
-            <startOffsets>
-              <option value="7107" />
-            </startOffsets>
-            <endOffsets>
-              <option value="7143" />
-            </endOffsets>
-          </properties>
-          <option name="timeStamp" value="18" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DotNet Breakpoints">
-          <url>file://$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs</url>
-          <line>209</line>
-          <properties documentPath="D:\My Stuff\Computer science\Projects\Networks project\Assets\Scripts\Networks\Client.cs" containingFunctionPresentation="Method 'ParsePayload'">
-            <startOffsets>
-              <option value="7410" />
-            </startOffsets>
-            <endOffsets>
-              <option value="7447" />
-            </endOffsets>
-          </properties>
-          <option name="timeStamp" value="19" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
     <pin-to-top-manager>
       <pinned-members>
         <PinnedItemInfo parentTag="Type#Game.GameManager" memberName="localClient" />
