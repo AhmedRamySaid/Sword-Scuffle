@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Networks
@@ -27,6 +28,9 @@ namespace Networks
         public ushort payloadLength;
         public byte[] payload;
         public uint checksum;
+        
+        // CRC32 lookup table for polynomial 0xEDB88320 (reversed form of 0x04C11DB7)
+        private static readonly uint[] Crc32Table = InitializeCrc32Table();
 
         public byte[] ToBytes(bool includeChecksum = false)
         {
@@ -44,7 +48,8 @@ namespace Networks
 
                 if (includeChecksum)
                 {
-                    checksum = Crc32(payload);
+                    byte[] packetContent = ms.ToArray();
+                    checksum = Crc32(packetContent);
                     writer.Write(checksum);                         // 4 bytes
                 }
 
@@ -52,18 +57,18 @@ namespace Networks
             }
         }
 
-        public static NetPacket FromBytes(byte[] data, bool hasChecksum = false)
+        public static NetPacket FromBytes(byte[] data, bool hasChecksum = false) 
         {
             using (MemoryStream ms = new MemoryStream(data))
             using (BinaryReader reader = new BinaryReader(ms))
             {
                 string protocol = Encoding.ASCII.GetString(reader.ReadBytes(4));
                 if (protocol != PROTOCOL_ID)
-                    throw new Exception("Invalid protocol ID");
+                    throw new InvalidDataException("Invalid protocol ID");
 
                 byte version = reader.ReadByte();
                 if (version != VERSION)
-                    throw new Exception("Version mismatch");
+                    throw new InvalidDataException("Version mismatch");
 
                 // Read the fixed fields first
                 MessageType msgType = (MessageType)reader.ReadByte();
@@ -80,7 +85,17 @@ namespace Networks
                 // Optional checksum
                 uint checksum = 0;
                 if (hasChecksum)
+                {
                     checksum = reader.ReadUInt32();
+                    // Validate checksum - calculate on everything except the checksum field itself
+                    byte[] dataWithoutChecksum = new byte[data.Length - 4];
+                    Array.Copy(data, 0, dataWithoutChecksum, 0, data.Length - 4);
+                    uint calculated = Crc32(dataWithoutChecksum);
+                    if (checksum != calculated)
+                    {
+                        throw new InvalidDataException($"Checksum mismatch. Received: {checksum}, Calculated: {calculated}");
+                    }
+                }
 
                 // Build the packet instance
                 NetPacket packet = new NetPacket
@@ -97,19 +112,41 @@ namespace Networks
                 return packet;
             }
         }
+        
+        
+        private static uint[] InitializeCrc32Table()
+        {
+            uint[] table = new uint[256];
+            const uint polynomial = 0xEDB88320u;
 
+            for (uint i = 0; i < 256; i++)
+            {
+                uint crc = i;
+                for (int j = 0; j < 8; j++)
+                {
+                    if ((crc & 1) != 0)
+                        crc = (crc >> 1) ^ polynomial;
+                    else
+                        crc >>= 1;
+                }
+                table[i] = crc;
+            }
+
+            return table;
+        }
+        
         private static uint Crc32(byte[] data)
         {
-            // Placeholder CRC32 – in a real version use a fast lookup table
             unchecked
             {
-                uint crc = 0xFFFFFFFF;
-                foreach (byte b in data)
+                uint crc = 0xFFFFFFFFu;
+
+                for (int i = 0; i < data.Length; i++)
                 {
-                    crc ^= b;
-                    for (int i = 0; i < 8; i++)
-                        crc = (crc >> 1) ^ (0xEDB88320u & ((crc & 1) != 0 ? 0xFFFFFFFFu : 0));
+                    byte index = (byte)((crc ^ data[i]) & 0xFF);
+                    crc = (crc >> 8) ^ Crc32Table[index];
                 }
+
                 return ~crc;
             }
         }
