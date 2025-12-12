@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -23,16 +22,21 @@ namespace Networks
         private string logFilePath;
         private Dictionary<IPEndPoint, uint> clientIds;
         private Dictionary<uint, PlayerData> players;
+        private Dictionary<uint, PlayerData> lastSentData;
         private uint nextPlayerId = 1; // player ids start at 1, the client treats itself as 0
         
-        public int KeyframeRateHz = 20;
+        public static readonly int KeyframeRateHz = 20;
+        private uint nextSnapshotId = 1;
+        private Dictionary<IPEndPoint, uint> latestSequences;
         private Thread keyframeThread;
 
         public void InitializeServer()
         {
             clientIds = new Dictionary<IPEndPoint, uint>();
             players = new Dictionary<uint, PlayerData>();
+            lastSentData = new Dictionary<uint, PlayerData>();
             logFilePath = Path.Combine(Application.persistentDataPath, "server_logs.txt");
+            latestSequences = new Dictionary<IPEndPoint, uint>();
             
             LogToFile("=== UDP Server Started ===");
 
@@ -85,8 +89,15 @@ namespace Networks
             {
                 try
                 {
-                    // Send to ALL clients
-                    SendKeyframe(clientIds.Keys.ToArray());
+                    // Send to all clients
+                    if (nextSnapshotId % KeyframeRateHz != 0)
+                    {
+                        SendSnapshot();
+                    }
+                    else // One second has passed
+                    {
+                        SendKeyframe(true);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -109,22 +120,20 @@ namespace Networks
                     case (MessageType.CONNECT):
                         if (((char)(packet.payload[0])).Equals('1')) // Established a connection
                         {
-                            if (!clientIds.TryGetValue(sender, out uint playerId))
-                            {
-                                playerId = nextPlayerId++;
-                                clientIds[sender] = playerId;
-                                PlayerData newPlayer = new PlayerData();
-                                players.Add(playerId, newPlayer);
-                                
-                                LogToFile($"Registered new client {sender} with PlayerID {playerId}");
-                                SendPlayerId(sender, playerId);
-                                
-                                var others = clientIds.Keys
-                                    .Where(ep => !ep.Equals(sender))
-                                    .ToList();
-                                SendJoinMessage(others,playerId, true);
-                                SendKeyframe(new IPEndPoint[] {sender});
-                            }
+                            uint playerId = nextPlayerId++;
+                            clientIds[sender] = playerId;
+                            PlayerData newPlayer = new PlayerData();
+                            players.Add(playerId, newPlayer);
+                            
+                            latestSequences[sender] = packet.seqNum;
+                            
+                            LogToFile($"Registered new client {sender} with PlayerID {playerId}");
+                            SendPlayerId(sender, playerId);
+                            
+                            var others = clientIds.Keys
+                                .Where(ep => !ep.Equals(sender))
+                                .ToList();
+                            SendJoinMessage(others,playerId, true);
                         }
                         else // Terminated the connection
                         {
@@ -132,10 +141,49 @@ namespace Networks
                         }
                         break;
                     case (MessageType.SNAPSHOT):
+                        int latestKeyframe = 0;
+                        int packetKeyframe = (int) packet.seqNum / KeyframeRateHz;
+                        
+                        if (latestSequences.TryGetValue(sender, out uint seqNum))
+                        {
+                            latestKeyframe = (int) seqNum / KeyframeRateHz;
+                        }
+                        else
+                        {
+                            latestKeyframe = packetKeyframe;
+                        }
+                        
+                        if (packetKeyframe < latestKeyframe) return; // Part of an older keyframe
+                        // Older sequences in the same keyframe are fine
                         string payload = Encoding.ASCII.GetString(packet.payload);
-                        PlayerData deltaData = PlayerData.DeltaDataDecoder(payload);
+                        PlayerData deltaData = PlayerData.ParseSingularData(payload);
+                        
+                        latestSequences[sender] = packet.seqNum;
                         PlayerData playerData = players[clientIds[sender]];
                         playerData.Add(deltaData);
+                        break;
+                    case (MessageType.KEYFRAME):
+                        int latestKf = 0;
+                        int packetKf = (int) packet.seqNum / KeyframeRateHz;
+                        
+                        if (latestSequences.TryGetValue(sender, out uint seqNumber))
+                        {
+                            latestKf = (int) seqNumber / KeyframeRateHz;
+                        }
+                        else
+                        {
+                            latestKf = packetKf;
+                        }
+                        
+                        if (packetKf < latestKf) return; // Part of an older keyframe
+                        // Older sequences in the same keyframe are fine
+                        
+                        string strPayload = Encoding.ASCII.GetString(packet.payload);
+                        PlayerData realData = PlayerData.ParseSingularData(strPayload);
+                        
+                        latestSequences[sender] = packet.seqNum;
+                        PlayerData currentPlayerData = players[clientIds[sender]];
+                        currentPlayerData.CopyData(realData);
                         break;
                     default:
                         break;
@@ -156,7 +204,7 @@ namespace Networks
             NetPacket packet = new NetPacket
             {
                 msgType = MessageType.CONNECT,
-                snapshotId = 0,
+                snapshotId = nextSnapshotId,
                 seqNum = 0,
                 serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 payload = payloadBytes,
@@ -170,11 +218,9 @@ namespace Networks
             }
         }
 
-        /*
-         * Different clients are seperated by a ';'
-         */
-        private void SendKeyframe(IPEndPoint[] receivers)
+        private void SendSnapshot()
         {
+            IPEndPoint[] receivers = clientIds.Keys.ToArray();
             var result = clientIds.
                 Where(kvps => receivers.Contains(kvps.Key))
                 .ToList();
@@ -183,8 +229,24 @@ namespace Networks
             foreach (KeyValuePair<IPEndPoint, uint> clientId in clientIds)
             {
                 PlayerData playerData = players[clientId.Value];
-                sb.Append(clientId.Value + "|");
-                sb.Append(playerData.ToRealString());
+                PlayerData deltaData;
+                
+                if (lastSentData.TryGetValue(clientId.Value, out PlayerData oldData))
+                {
+                    deltaData = PlayerData.SubtractData(playerData, oldData);
+                    oldData.CopyData(playerData);
+                }
+                else
+                {
+                    SendKeyframe(false);
+                    return;
+                }
+
+                string str = deltaData.ToDeltaString();
+                if (str.Equals("")) continue;
+
+                sb.Append($"{clientId.Value}|");
+                sb.Append(str);
                 sb.Append(';');
             }
 
@@ -197,8 +259,8 @@ namespace Networks
             byte[] payloadBytes = Encoding.ASCII.GetBytes(payload);
             NetPacket packet = new NetPacket
             {
-                msgType = MessageType.KEYFRAME,
-                snapshotId = 0,
+                msgType = MessageType.SNAPSHOT,
+                snapshotId = nextSnapshotId++,
                 seqNum = 0,
                 serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 payload = payloadBytes,
@@ -206,6 +268,63 @@ namespace Networks
             };
             byte[] data = packet.ToBytes();
 
+            foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
+            {
+                udpServer.Send(data, data.Length, clientId.Key);  
+            }
+        }
+        
+        /*
+         * Different clients are seperated by a ';'
+         */
+        private void SendKeyframe(bool isPeriodicalKeyframe)
+        {
+            IPEndPoint[] receivers = clientIds.Keys.ToArray();
+            var result = clientIds.
+                Where(kvps => receivers.Contains(kvps.Key))
+                .ToList();
+            var sb = new StringBuilder();
+
+            foreach (KeyValuePair<IPEndPoint, uint> clientId in clientIds)
+            {
+                PlayerData playerData = players[clientId.Value];
+
+                string str = playerData.ToRealString();
+                if (str.Equals("")) continue;
+
+                sb.Append($"{clientId.Value}|");
+                sb.Append(str);
+                sb.Append(';');
+                if (lastSentData.TryGetValue(clientId.Value, out PlayerData latestData))
+                {
+                    latestData.CopyData(playerData);
+                }
+                else
+                {
+                    lastSentData.Add(clientId.Value, playerData);
+                }
+            }
+
+            // Remove the trailing semi-column if present
+            if (sb.Length > 0)
+                sb.Length--;
+            
+            string payload = sb.ToString();
+            
+            byte[] payloadBytes = Encoding.ASCII.GetBytes(payload);
+            NetPacket packet = new NetPacket
+            {
+                msgType = MessageType.KEYFRAME,
+                snapshotId = nextSnapshotId,
+                seqNum = 0,
+                serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                payload = payloadBytes,
+                payloadLength = (ushort)payloadBytes.Length
+            };
+            byte[] data = packet.ToBytes();
+
+            if (isPeriodicalKeyframe) nextSnapshotId++;
+            
             foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
             {
                 udpServer.Send(data, data.Length, clientId.Key);  
@@ -237,7 +356,7 @@ namespace Networks
             NetPacket packet = new NetPacket
             {
                 msgType = MessageType.ID_SET,
-                snapshotId = 0,
+                snapshotId = nextSnapshotId,
                 seqNum = 0,
                 serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 payload = payloadBytes,

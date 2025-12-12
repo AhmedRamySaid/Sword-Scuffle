@@ -294,6 +294,73 @@ namespace Game
             return deltaData;
         }
 
+        public void ApplyDeltaData(PlayerData deltaData)
+        {
+            // Facing direction
+            if (deltaData.mFacingDirection != 0 && deltaData.mFacingDirection != currentData.mFacingDirection)
+            {
+                FlipX(deltaData.mFacingDirection > 0);
+                currentData.mFacingDirection = deltaData.mFacingDirection;
+            }
+
+            // Rolling
+            if (deltaData.rollingChanged)
+            {
+                if (deltaData.mRolling && !currentData.mRolling)
+                    mAnimator.SetTrigger(HashRoll);
+                currentData.mRolling = deltaData.mRolling;
+            }
+
+            // Attacking
+            if (deltaData.attackingChanged)
+            {
+                if (deltaData.isAttacking && !currentData.isAttacking)
+                {
+                    int attackHash = deltaData.mCurrentAttack switch
+                    {
+                        1 => HashAttack1,
+                        2 => HashAttack2,
+                        3 => HashAttack3,
+                        _ => HashAttack1
+                    };
+                    mAnimator.SetTrigger(attackHash);
+                }
+                currentData.isAttacking = deltaData.isAttacking;
+                currentData.mCurrentAttack += deltaData.mCurrentAttack; // accumulate attacks if needed
+            }
+
+            // Blocking
+            if (deltaData.blockingChanged)
+            {
+                if (deltaData.isBlocking && !currentData.isBlocking)
+                    mAnimator.SetTrigger(HashBlock);
+                currentData.isBlocking = deltaData.isBlocking;
+            }
+
+            // Position delta (smooth movement)
+            if (deltaData.xPos != 0 || deltaData.yPos != 0)
+            {
+                Vector2 targetPos = new Vector2(currentData.xPos + deltaData.xPos,
+                    currentData.yPos + deltaData.yPos);
+                mBody2d.position = Vector2.Lerp(mBody2d.position, targetPos, 0.5f);
+
+                currentData.xPos += deltaData.xPos;
+                currentData.yPos += deltaData.yPos;
+            }
+        }
+
+
+        public PlayerData GetRealData()
+        {
+            currentData.xPos = mBody2d.position.x;
+            currentData.yPos = mBody2d.position.y;
+            lastSentData.CopyData(currentData);
+            
+            PlayerData realData = new PlayerData();
+            realData.CopyData(lastSentData);
+            return realData;
+        }
+        
         public void ApplyRealData(PlayerData data)
         {
             // Facing direction
