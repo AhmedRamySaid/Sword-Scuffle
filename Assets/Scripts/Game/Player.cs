@@ -17,7 +17,7 @@ namespace Game
 
         private bool mIsWallSliding;
         private bool mGrounded;
-        
+
         private float mDelayToIdle;
         private float mRollCurrentTime;
         private readonly float mRollDuration = 8f / 14f; // ~0.57s
@@ -29,10 +29,12 @@ namespace Game
         private Collider2D rightSwordHitbox;
         private SpriteRenderer spriteRenderer;
         private List<Player> hitPlayers;
-        
+
+        private Vector2 targetPosition;
+        private readonly float smoothSpeed = 8f;
+
         public bool isPlayer = false;
 
-        // Animator hashes
         private static readonly int HashRoll = Animator.StringToHash("Roll");
         private static readonly int HashAttack1 = Animator.StringToHash("Attack1");
         private static readonly int HashAttack2 = Animator.StringToHash("Attack2");
@@ -47,29 +49,49 @@ namespace Game
         private static readonly int HashAnimState = Animator.StringToHash("AnimState");
         private static readonly int HashIdleBlock = Animator.StringToHash("IdleBlock");
 
+        private bool wasInAttack = false;
+
         public void Initialize()
         {
             lastSentData = new PlayerData();
             currentData = new PlayerData();
+
+            currentData.xPos = transform.position.x;
+            currentData.yPos = transform.position.y;
+            lastSentData.CopyData(currentData);
+
             mAnimator = GetComponent<Animator>();
             mBody2d = GetComponent<Rigidbody2D>();
             mGroundSensor = transform.Find("GroundSensor").GetComponent<Sensor_HeroKnight>();
-            
+
             leftSwordHitbox = transform.Find("SwordHitboxLeft").GetComponent<Collider2D>();
             rightSwordHitbox = transform.Find("SwordHitboxRight").GetComponent<Collider2D>();
             spriteRenderer = GetComponent<SpriteRenderer>();
-            
+
+            if (!isPlayer)
+            {
+                Rigidbody2D rb = GetComponent<Rigidbody2D>();
+                rb.gravityScale = 0.001f;
+            }
+
+            targetPosition = new Vector2(currentData.xPos, currentData.yPos);
             hitPlayers = new List<Player>();
         }
 
         private void Update()
         {
+            UpdateAttackingStateMachine();
             HandleTimers();
             HandleGrounded();
             HandleInput();
             ApplyVariableGravity();
             UpdateAnimator();
-            UpdateAttacking();
+        }
+
+        public void SetToPlayer()
+        {
+            isPlayer = true;
+            GetComponent<Rigidbody2D>().gravityScale = 1f;
         }
 
         private void HandleTimers()
@@ -109,37 +131,25 @@ namespace Game
             float inputX = Input.GetAxisRaw("Horizontal");
             float inputY = Input.GetAxisRaw("Vertical");
 
-            // Flip sprite
-            if (inputX > 0)
-            {
-                FlipX(true);
-            }
-            else if (inputX < 0)
-            {
-                FlipX(false);
-            }
+            if (inputX > 0) FlipX(true);
+            else if (inputX < 0) FlipX(false);
 
             if (inputY < 0 && mBody2d.velocity.y > 0)
                 mBody2d.velocity = new Vector2(mBody2d.velocity.x, 0);
 
-            // Movement (disabled while rolling)
             if (!currentData.mRolling)
                 mBody2d.velocity = new Vector2(inputX * mSpeed, mBody2d.velocity.y);
 
-            // Roll
-            if (Input.GetKeyDown(KeyCode.LeftShift) && !currentData.mRolling && !mIsWallSliding)
+            if (Input.GetKeyDown(KeyCode.LeftShift) && !currentData.mRolling)
                 StartRoll();
 
-            // Jump
-            else if (Input.GetKeyDown(KeyCode.Space) && mGrounded && !currentData.mRolling)
+            else if (Input.GetKeyDown(KeyCode.Space) && mGrounded)
                 Jump();
 
-            // Attack
-            else if (Input.GetMouseButtonDown(0) && currentData.mTimeSinceAttack > 0.429f && !currentData.mRolling)
+            else if (Input.GetMouseButtonDown(0) && currentData.mTimeSinceAttack > 0.429f)
                 Attack();
 
-            // Block
-            else if (Input.GetMouseButtonDown(1) && !currentData.mRolling)
+            else if (Input.GetMouseButtonDown(1))
             {
                 currentData.isBlocking = true;
                 mAnimator.SetTrigger(HashBlock);
@@ -151,13 +161,6 @@ namespace Game
                 mAnimator.SetBool(HashIdleBlock, false);
             }
 
-            // Hurt / Death
-            else if (Input.GetKeyDown(KeyCode.Q) && !currentData.mRolling)
-                mAnimator.SetTrigger(HashHurt);
-            else if (Input.GetKeyDown(KeyCode.E) && !currentData.mRolling)
-                mAnimator.SetTrigger(HashDeath);
-
-            // Run / Idle
             if (Mathf.Abs(inputX) > Mathf.Epsilon)
             {
                 mDelayToIdle = 0.05f;
@@ -192,56 +195,70 @@ namespace Game
         private void Attack()
         {
             if (currentData.isAttacking) return;
-            
+
             currentData.mCurrentAttack++;
             if (currentData.mCurrentAttack > 2) currentData.mCurrentAttack = 1;
             if (currentData.mTimeSinceAttack > 1.0f) currentData.mCurrentAttack = 1;
 
-            // Use cached hashes
             int attackHash = currentData.mCurrentAttack switch
             {
                 1 => HashAttack1,
                 2 => HashAttack2,
                 _ => HashAttack1
             };
+
             mAnimator.SetTrigger(attackHash);
             currentData.isAttacking = true;
             currentData.mTimeSinceAttack = 0.0f;
         }
 
+        private void UpdateAttackingStateMachine()
+        {
+            AnimatorStateInfo state = mAnimator.GetCurrentAnimatorStateInfo(0);
+            bool inAttack =
+                state.IsName("Attack1") ||
+                state.IsName("Attack2") ||
+                state.IsName("Attack3");
+
+            if (inAttack)
+            {
+                if (currentData.mFacingDirection == 1)
+                {
+                    rightSwordHitbox.enabled = true;
+                    leftSwordHitbox.enabled = false;
+                }
+                else
+                {
+                    leftSwordHitbox.enabled = true;
+                    rightSwordHitbox.enabled = false;
+                }
+
+                wasInAttack = true;
+                return;
+            }
+
+            leftSwordHitbox.enabled = false;
+            rightSwordHitbox.enabled = false;
+
+            if (wasInAttack && !inAttack)
+            {
+                wasInAttack = false;
+                currentData.isAttacking = false;
+                hitPlayers.Clear();
+            }
+        }
+
         private void ApplyVariableGravity()
         {
+            if (!isPlayer) return;
+
             if (!mGrounded)
             {
                 if (mBody2d.velocity.y < 0)
                     mBody2d.velocity += Vector2.up * Physics2D.gravity.y * (mFallGravityMultiplier - 1) * Time.deltaTime;
                 else if (mBody2d.velocity.y > 0 && !Input.GetKey(KeyCode.Space))
-                    mBody2d.velocity += Vector2.up * Physics2D.gravity.y * 0.2f * Time.deltaTime; // short hop
+                    mBody2d.velocity += Vector2.up * Physics2D.gravity.y * 0.2f * Time.deltaTime;
             }
-        }
-
-        private void UpdateAttacking()
-        {
-            AnimatorStateInfo state = mAnimator.GetCurrentAnimatorStateInfo(0);
-            bool attack = state.IsName("Attack1") || 
-                          state.IsName("Attack2") || 
-                          state.IsName("Attack3");
-
-            if (!attack)
-            {
-                leftSwordHitbox.enabled = false;
-                rightSwordHitbox.enabled = false;
-                currentData.isAttacking = false;
-                hitPlayers.Clear();
-                return;
-            }
-
-            if (currentData.mFacingDirection == 1)
-            {
-                rightSwordHitbox.enabled = true;
-                return;
-            }
-            leftSwordHitbox.enabled = true;
         }
 
         private void UpdateAnimator()
@@ -252,14 +269,12 @@ namespace Game
 
         private void FlipX(bool facingRight)
         {
-            int dir = facingRight ? 1 : -1;
             spriteRenderer.flipX = !facingRight;
-            currentData.mFacingDirection = dir;
+            currentData.mFacingDirection = facingRight ? 1 : -1;
         }
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            // Check if the collider is a sword
             if (other.CompareTag("Sword"))
             {
                 bool gotHit = other.GetComponentInParent<Player>().AttackPlayer(this);
@@ -294,24 +309,25 @@ namespace Game
             return deltaData;
         }
 
+        private void FixedUpdate()
+        {
+            if (isPlayer) return;
+            mBody2d.position = Vector2.Lerp(mBody2d.position, targetPosition, Time.fixedDeltaTime * smoothSpeed);
+        }
+
         public void ApplyDeltaData(PlayerData deltaData)
         {
-            // Facing direction
             if (deltaData.mFacingDirection != 0 && deltaData.mFacingDirection != currentData.mFacingDirection)
-            {
                 FlipX(deltaData.mFacingDirection > 0);
-                currentData.mFacingDirection = deltaData.mFacingDirection;
-            }
 
-            // Rolling
             if (deltaData.rollingChanged)
             {
                 if (deltaData.mRolling && !currentData.mRolling)
                     mAnimator.SetTrigger(HashRoll);
+
                 currentData.mRolling = deltaData.mRolling;
             }
 
-            // Attacking
             if (deltaData.attackingChanged)
             {
                 if (deltaData.isAttacking && !currentData.isAttacking)
@@ -326,55 +342,44 @@ namespace Game
                     mAnimator.SetTrigger(attackHash);
                 }
                 currentData.isAttacking = deltaData.isAttacking;
-                currentData.mCurrentAttack += deltaData.mCurrentAttack; // accumulate attacks if needed
+                currentData.mCurrentAttack += deltaData.mCurrentAttack;
             }
 
-            // Blocking
             if (deltaData.blockingChanged)
             {
                 if (deltaData.isBlocking && !currentData.isBlocking)
                     mAnimator.SetTrigger(HashBlock);
+
                 currentData.isBlocking = deltaData.isBlocking;
+                mAnimator.SetBool(HashIdleBlock, deltaData.isBlocking);
             }
 
-            // Position delta (smooth movement)
-            if (deltaData.xPos != 0 || deltaData.yPos != 0)
-            {
-                Vector2 targetPos = new Vector2(currentData.xPos + deltaData.xPos,
-                    currentData.yPos + deltaData.yPos);
-                mBody2d.position = Vector2.Lerp(mBody2d.position, targetPos, 0.5f);
-
-                currentData.xPos += deltaData.xPos;
-                currentData.yPos += deltaData.yPos;
-            }
+            targetPosition = new Vector2(currentData.xPos + deltaData.xPos, currentData.yPos + deltaData.yPos);
+            currentData.xPos += deltaData.xPos;
+            currentData.yPos += deltaData.yPos;
         }
-
 
         public PlayerData GetRealData()
         {
             currentData.xPos = mBody2d.position.x;
             currentData.yPos = mBody2d.position.y;
             lastSentData.CopyData(currentData);
-            
+
             PlayerData realData = new PlayerData();
             realData.CopyData(lastSentData);
             return realData;
         }
-        
+
         public void ApplyRealData(PlayerData data)
         {
-            // Facing direction
             if (data.mFacingDirection != 0 && data.mFacingDirection != currentData.mFacingDirection)
-            {
-                FlipX(currentData.mFacingDirection > 0);
-            }
+                FlipX(data.mFacingDirection > 0);
 
-            // Rolling
             if (data.mRolling && !currentData.mRolling)
                 mAnimator.SetTrigger(HashRoll);
+
             currentData.mRolling = data.mRolling;
 
-            // Attacking
             if (data.isAttacking && !currentData.isAttacking)
             {
                 int attackHash = data.mCurrentAttack switch
@@ -386,16 +391,23 @@ namespace Game
                 };
                 mAnimator.SetTrigger(attackHash);
             }
+
             currentData.isAttacking = data.isAttacking;
             currentData.mCurrentAttack = data.mCurrentAttack;
 
-            // Blocking
-            if (data.isBlocking && !currentData.isBlocking)
-                mAnimator.SetTrigger(HashBlock);
+            if (data.isBlocking != currentData.isBlocking)
+            {
+                if (data.isBlocking)
+                    mAnimator.SetTrigger(HashBlock);
+
+                mAnimator.SetBool(HashIdleBlock, data.isBlocking);
+            }
+
             currentData.isBlocking = data.isBlocking;
 
-            // Smooth remote movement
-            mBody2d.position = Vector2.Lerp(mBody2d.position, new Vector2(data.xPos, data.yPos), 0.5f);
+            targetPosition = new Vector2(data.xPos, data.yPos);
+            currentData.xPos = data.xPos;
+            currentData.yPos = data.yPos;
         }
     }
 }

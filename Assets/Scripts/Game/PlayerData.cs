@@ -167,12 +167,15 @@ namespace Game
                     {
                         case "Rolling":
                             pd.mRolling = bool.Parse(value);
+                            pd.rollingChanged = true;
                             break;
                         case "Atk":
                             pd.isAttacking = bool.Parse(value);
+                            pd.attackingChanged = true;
                             break;
                         case "Block":
                             pd.isBlocking = bool.Parse(value);
+                            pd.blockingChanged = true;
                             break;
                         case "Facing":
                             pd.mFacingDirection = int.Parse(value);

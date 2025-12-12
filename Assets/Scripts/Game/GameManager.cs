@@ -51,7 +51,7 @@ namespace Game
             Players = new Dictionary<uint, Player>();
 
             player = AddPlayer(0);
-            player.isPlayer = true;
+            player.SetToPlayer();
         }
 
         public void ApplyMovement(uint id, Vector3 position)
@@ -66,6 +66,7 @@ namespace Game
         public void ApplyDeltaData(PlayerData deltaData)
         {
             Player p = Players[deltaData.id];
+            if (p.Equals(player)) return;
             p.ApplyDeltaData(deltaData);
         }
 
