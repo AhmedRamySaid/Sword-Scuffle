@@ -205,6 +205,7 @@ namespace Networks
                     }
                     break;
                 case MessageType.KEYFRAME:
+                    LogToFile("Received keyframe:\n" + packet.ToString());
                     int latestKeyframe = (int) latestSnapshot / Server.KeyframeRateHz; // Get keyframe
                     int packetKeyframe = (int) packet.snapshotId / Server.KeyframeRateHz;
                     
@@ -283,6 +284,7 @@ namespace Networks
                 payloadLength = (ushort)payload.Length
             };
             byte[] packetBytes = packet.ToBytes();
+            LogToFile("Sent keyframe:\n" + packet.ToString());
             udpClient.Send(packetBytes, packetBytes.Length);
         }
 
@@ -321,7 +323,6 @@ namespace Networks
             {
                 string entry = $"[{DateTime.Now:HH:mm:ss}] {text}\n";
                 File.AppendAllText(logFilePath, entry);
-                Debug.Log(text);
             }
             catch (Exception e)
             {

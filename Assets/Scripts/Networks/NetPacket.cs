@@ -150,5 +150,12 @@ namespace Networks
                 return ~crc;
             }
         }
+
+        public override string ToString()
+        {
+            return $"MsgType: {msgType}, SnapshotId: {snapshotId}, SeqNum: {seqNum}, " +
+                   $"ServerTimestamp: {serverTimestamp}, PayloadLength: {payloadLength}, " +
+                   $"Payload: {Encoding.ASCII.GetString(payload)}";
+        }
     }
 }
