@@ -301,7 +301,9 @@ namespace Networks
                 }
                 else
                 {
-                    lastSentData.Add(clientId.Value, playerData);
+                    PlayerData pd = new PlayerData();
+                    pd.CopyData(playerData);
+                    lastSentData.Add(clientId.Value, pd);
                 }
             }
 
