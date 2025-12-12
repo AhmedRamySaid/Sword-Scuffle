@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Networks;
 using UnityEngine;
 
@@ -16,9 +15,6 @@ namespace Game
         private Server server;
         private Client localClient;
         private Vector3 lastSentPosition;
-        
-        private const int Frequency = 20;
-        private const float SendInterval = 1.0f/Frequency;
 
         void Awake() => Instance = this;
 
@@ -46,12 +42,11 @@ namespace Game
 
         public void JoinGame(string serverIP)
         {
-            //todo: use serverIP
-            localClient = new Client("127.0.0.1");
+            localClient = new Client(serverIP);
             if (localClient.Connected) StartGame();
         }
         
-        private async void StartGame()
+        private void StartGame()
         {
             Players = new Dictionary<uint, Player>();
 
@@ -68,11 +63,10 @@ namespace Game
             p.transform.position = position;
         }
 
-        public void ApplyDeltaMovement(uint id, Vector3 deltaPos)
+        public void ApplyDeltaData(PlayerData deltaData)
         {
-            //todo: change
-            Player player = Players[id];
-            player.transform.position += deltaPos;
+            Player p = Players[deltaData.id];
+            p.ApplyDeltaData(deltaData);
         }
 
         public void ApplyPlayerData(PlayerData data)

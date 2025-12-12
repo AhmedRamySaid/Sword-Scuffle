@@ -36,6 +36,7 @@ namespace Networks
             players = new Dictionary<uint, PlayerData>();
             lastSentData = new Dictionary<uint, PlayerData>();
             logFilePath = Path.Combine(Application.persistentDataPath, "server_logs.txt");
+            latestSequences = new Dictionary<IPEndPoint, uint>();
             
             LogToFile("=== UDP Server Started ===");
 
@@ -95,7 +96,7 @@ namespace Networks
                     }
                     else // One second has passed
                     {
-                        SendKeyframe();
+                        SendKeyframe(true);
                     }
                 }
                 catch (Exception e)
@@ -141,11 +142,11 @@ namespace Networks
                         break;
                     case (MessageType.SNAPSHOT):
                         int latestKeyframe = 0;
-                        int packetKeyframe = (int) packet.seqNum % KeyframeRateHz;
+                        int packetKeyframe = (int) packet.seqNum / KeyframeRateHz;
                         
                         if (latestSequences.TryGetValue(sender, out uint seqNum))
                         {
-                            latestKeyframe = (int) seqNum % KeyframeRateHz;
+                            latestKeyframe = (int) seqNum / KeyframeRateHz;
                         }
                         else
                         {
@@ -154,20 +155,20 @@ namespace Networks
                         
                         if (packetKeyframe < latestKeyframe) return; // Part of an older keyframe
                         // Older sequences in the same keyframe are fine
+                        string payload = Encoding.ASCII.GetString(packet.payload);
+                        PlayerData deltaData = PlayerData.ParseSingularData(payload);
                         
                         latestSequences[sender] = packet.seqNum;
-                        string payload = Encoding.ASCII.GetString(packet.payload);
-                        PlayerData deltaData = PlayerData.DeltaDataDecoder(payload);
                         PlayerData playerData = players[clientIds[sender]];
                         playerData.Add(deltaData);
                         break;
                     case (MessageType.KEYFRAME):
                         int latestKf = 0;
-                        int packetKf = (int) packet.seqNum % KeyframeRateHz;
+                        int packetKf = (int) packet.seqNum / KeyframeRateHz;
                         
                         if (latestSequences.TryGetValue(sender, out uint seqNumber))
                         {
-                            latestKf = (int) seqNumber % KeyframeRateHz;
+                            latestKf = (int) seqNumber / KeyframeRateHz;
                         }
                         else
                         {
@@ -177,11 +178,12 @@ namespace Networks
                         if (packetKf < latestKf) return; // Part of an older keyframe
                         // Older sequences in the same keyframe are fine
                         
-                        latestSequences[sender] = packet.seqNum;
                         string strPayload = Encoding.ASCII.GetString(packet.payload);
-                        PlayerData[] realData = PlayerData.ParseRealData(strPayload);
+                        PlayerData realData = PlayerData.ParseSingularData(strPayload);
+                        
+                        latestSequences[sender] = packet.seqNum;
                         PlayerData currentPlayerData = players[clientIds[sender]];
-                        currentPlayerData.CopyData(realData[0]);
+                        currentPlayerData.CopyData(realData);
                         break;
                     default:
                         break;
@@ -236,11 +238,15 @@ namespace Networks
                 }
                 else
                 {
+                    SendKeyframe(false);
                     return;
                 }
-                
-                sb.Append(clientId.Value + "|");
-                sb.Append(deltaData.ToDeltaString());
+
+                string str = deltaData.ToDeltaString();
+                if (str.Equals("")) continue;
+
+                sb.Append($"{clientId.Value}|");
+                sb.Append(str);
                 sb.Append(';');
             }
 
@@ -253,7 +259,7 @@ namespace Networks
             byte[] payloadBytes = Encoding.ASCII.GetBytes(payload);
             NetPacket packet = new NetPacket
             {
-                msgType = MessageType.KEYFRAME,
+                msgType = MessageType.SNAPSHOT,
                 snapshotId = nextSnapshotId++,
                 seqNum = 0,
                 serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
@@ -271,7 +277,7 @@ namespace Networks
         /*
          * Different clients are seperated by a ';'
          */
-        private void SendKeyframe()
+        private void SendKeyframe(bool isPeriodicalKeyframe)
         {
             IPEndPoint[] receivers = clientIds.Keys.ToArray();
             var result = clientIds.
@@ -282,8 +288,12 @@ namespace Networks
             foreach (KeyValuePair<IPEndPoint, uint> clientId in clientIds)
             {
                 PlayerData playerData = players[clientId.Value];
-                sb.Append(clientId.Value + "|");
-                sb.Append(playerData.ToRealString());
+
+                string str = playerData.ToRealString();
+                if (str.Equals("")) continue;
+
+                sb.Append($"{clientId.Value}|");
+                sb.Append(str);
                 sb.Append(';');
                 if (lastSentData.TryGetValue(clientId.Value, out PlayerData latestData))
                 {
@@ -305,7 +315,7 @@ namespace Networks
             NetPacket packet = new NetPacket
             {
                 msgType = MessageType.KEYFRAME,
-                snapshotId = nextSnapshotId++,
+                snapshotId = nextSnapshotId,
                 seqNum = 0,
                 serverTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 payload = payloadBytes,
@@ -313,6 +323,8 @@ namespace Networks
             };
             byte[] data = packet.ToBytes();
 
+            if (isPeriodicalKeyframe) nextSnapshotId++;
+            
             foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
             {
                 udpServer.Send(data, data.Length, clientId.Key);  

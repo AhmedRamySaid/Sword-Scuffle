@@ -23,6 +23,7 @@ namespace Networks
         private uint latestSnapshot = 0;
             
         private IPEndPoint serverEndPoint;
+        private Thread keyframeThread;
 
         public Client(string serverIP)
         {
@@ -36,6 +37,8 @@ namespace Networks
             LogToFile("=== UDP Client Started ===");
 
             ConnectToServer();
+            keyframeThread = new Thread(KeyframeLoop);
+            keyframeThread.Start();
         }
 
         void ConnectToServer()
@@ -69,13 +72,13 @@ namespace Networks
                 try
                 {
                     // Send delta data
-                    if (nextSeqNum % Server.KeyframeRateHz != 0) 
+                    if (nextSeqNum % Server.KeyframeRateHz != 0)
                     {
-                        SendDeltaData(GameManager.Instance.player.GetDeltaData());
+                        RetrieveDeltaData(SendDeltaData);
                     }
                     else // One second has Passed, send real data
                     {
-                        SendRealData(GameManager.Instance.player.GetRealData());
+                        RetrieveRealData(SendRealData);
                     }
                 }
                 catch (Exception e)
@@ -85,6 +88,30 @@ namespace Networks
 
                 Thread.Sleep(delayMs);
             }
+        }
+        
+        private void RetrieveDeltaData(Action<PlayerData> onDeltaReady)
+        {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                // This runs on the main thread
+                PlayerData delta = GameManager.Instance.player.GetDeltaData();
+
+                // Invoke the callback immediately
+                onDeltaReady?.Invoke(delta);
+            });
+        }
+        
+        private void RetrieveRealData(Action<PlayerData> onDataReady)
+        {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                // This runs on the main thread
+                PlayerData data = GameManager.Instance.player.GetRealData();
+
+                // Invoke the callback immediately
+                onDataReady?.Invoke(data);
+            });
         }
         
         void ReceiveData()
@@ -146,46 +173,40 @@ namespace Networks
                     }
                     break;
                 case MessageType.SNAPSHOT:
-                    int latestKf = (int) latestSnapshot % Server.KeyframeRateHz; // Get keyframe
-                    int packetKf = (int) packet.snapshotId % Server.KeyframeRateHz;
+                    int latestKf = (int) latestSnapshot / Server.KeyframeRateHz; // Get keyframe
+                    int packetKf = (int) packet.snapshotId / Server.KeyframeRateHz;
                     
                     if (packetKf < latestKf) return; // Part of an older keyframe
                     
                     latestSnapshot = packet.snapshotId;
                     
-                    string[] snapshotParts = payloadStr.Split(new char[] { ':', '/' }, StringSplitOptions.RemoveEmptyEntries);
-                    uint snapshotPlayerId = uint.Parse(snapshotParts[1]);
-                    
-                    // Parse payload into Vector3
-                    string[] vectorParts = snapshotParts[2].Split(',');
-
-                    if (snapshotParts.Length == 3 && 
-                        float.TryParse(vectorParts[0], out float x) &&
-                        float.TryParse(vectorParts[1], out float y))
+                    try
                     {
-                        Vector3 delta = new Vector3(x, y, 1);
-
-                        // Forward to GameManager on the main thread
-                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                        PlayerData[] deltaData = PlayerData.ParseData(payloadStr);
+                        foreach (PlayerData data in deltaData)
                         {
-                            GameManager.Instance.ApplyDeltaMovement(snapshotPlayerId, delta);
-                        });
+                            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                            {
+                                GameManager.Instance.ApplyDeltaData(data);
+                            });
+                        }
                     }
-                    else
+                    catch (FormatException e)
                     {
-                        Debug.LogWarning("Invalid payload received: " + payloadStr);
+                        LogToFile("Invalid line in keyframe payload: " + payloadStr);
+                        LogToFile("Exception: " + e);
                     }
                     break;
                 case MessageType.KEYFRAME:
-                    int latestKeyframe = (int) latestSnapshot % Server.KeyframeRateHz; // Get keyframe
-                    int packetKeyframe = (int) packet.snapshotId % Server.KeyframeRateHz;
+                    int latestKeyframe = (int) latestSnapshot / Server.KeyframeRateHz; // Get keyframe
+                    int packetKeyframe = (int) packet.snapshotId / Server.KeyframeRateHz;
                     
                     if (packetKeyframe < latestKeyframe) return; // Part of an older keyframe
                     
                     latestSnapshot = packet.snapshotId;
                     try
                     {
-                        PlayerData[] realData = PlayerData.ParseRealData(payloadStr);
+                        PlayerData[] realData = PlayerData.ParseData(payloadStr);
                         foreach (PlayerData data in realData)
                         {
                             UnityMainThreadDispatcher.Instance().Enqueue(() =>
