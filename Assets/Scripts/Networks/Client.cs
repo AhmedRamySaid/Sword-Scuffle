@@ -123,9 +123,16 @@ namespace Networks
                 {
                     byte[] receivedBytes = udpClient.Receive(ref remoteEP); // blocking call
 
-                    NetPacket packet = NetPacket.FromBytes(receivedBytes);
-                    
-                    ParsePayload(packet);
+                    try
+                    {
+                        NetPacket packet = NetPacket.FromBytes(receivedBytes);
+                        ParsePayload(packet);
+                    }
+                    catch (InvalidDataException exception)
+                    {
+                        LogToFile("Invalid packet received: " + exception.Message);
+                    }
+
                 }
             }
             catch (SocketException se)
