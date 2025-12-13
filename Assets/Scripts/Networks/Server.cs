@@ -133,11 +133,21 @@ namespace Networks
                             var others = clientIds.Keys
                                 .Where(ep => !ep.Equals(sender))
                                 .ToList();
-                            SendJoinMessage(others,playerId, true);
+                            SendJoinMessage(others, playerId, true);
                         }
                         else // Terminated the connection
                         {
-                            //todo implement
+                            if (clientIds.TryGetValue(sender, out uint playerId))
+                            {
+                                clientIds.Remove(sender);
+                                players.Remove(playerId);
+                                lastSentData.Remove(playerId);
+                                
+                                var others = clientIds.Keys
+                                    .Where(ep => !ep.Equals(sender))
+                                    .ToList();
+                                SendJoinMessage(others, playerId, false);
+                            }
                         }
                         break;
                     case (MessageType.SNAPSHOT):

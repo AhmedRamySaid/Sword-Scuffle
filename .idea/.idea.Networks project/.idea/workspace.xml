@@ -6,8 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/Player.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/Player.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/PlayerData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/PlayerData.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/GameManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/Managed/Assembly-CSharp.dll" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/Managed/Assembly-CSharp.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/boot.config" beforeDir="false" afterPath="$PROJECT_DIR$/Bin/Sword Scuffle_Data/boot.config" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,7 +23,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="branch" />
+        <entry key="$PROJECT_DIR$" value="death" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -112,7 +115,7 @@
     &quot;Attach to Unity Editor.Attach to Unity Editor.executor&quot;: &quot;Debug&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;XThreadsFramesViewSplitterKey&quot;: &quot;0.07589286&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;NewChecksum&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Exit&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -156,10 +159,10 @@
       </option>
       <method v="2" />
     </configuration>
-    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost" ignored-value-for-modified-check="24588">
+    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost">
       <option name="allowRunningInParallel" value="false" />
       <option name="listenPortForConnections" value="false" />
-      <option name="pid" value="24588" />
+      <option name="pid" />
       <option name="projectPathOnTarget" />
       <option name="selectedOptions">
         <list />
@@ -191,7 +194,8 @@
       <workItem from="1765537073776" duration="10695000" />
       <workItem from="1765550160191" duration="10713000" />
       <workItem from="1765562051081" duration="4975000" />
-      <workItem from="1765637409199" duration="3526000" />
+      <workItem from="1765637409199" duration="8951000" />
+      <workItem from="1765652356982" duration="1167000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -497,7 +501,15 @@
       <option name="project" value="LOCAL" />
       <updated>1765565930017</updated>
     </task>
-    <option name="localTasksCounter" value="39" />
+    <task id="LOCAL-00039" summary="Added DEATH">
+      <option name="closed" value="true" />
+      <created>1765642585452</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1765642585452</updated>
+    </task>
+    <option name="localTasksCounter" value="40" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -524,7 +536,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
-    <MESSAGE value="Fixed Game scene so it extends" />
     <MESSAGE value="Added code for multiple clients to play together" />
     <MESSAGE value="Now you can establish multiple connections" />
     <MESSAGE value="Broadcast frameworks to the client that joins" />
@@ -549,39 +560,10 @@
     <MESSAGE value="Added things" />
     <MESSAGE value="Working checksum" />
     <MESSAGE value="Added more things" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added more things" />
+    <MESSAGE value="Added DEATH" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added DEATH" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="DotNet Breakpoints">
-          <url>file://$PROJECT_DIR$/Assets/Scripts/Game/Player.cs</url>
-          <line>168</line>
-          <properties documentPath="D:\My Stuff\Computer science\Projects\Networks project\Assets\Scripts\Game\Player.cs" containingFunctionPresentation="Method 'HandleInput'">
-            <startOffsets>
-              <option value="6010" />
-            </startOffsets>
-            <endOffsets>
-              <option value="6049" />
-            </endOffsets>
-          </properties>
-          <option name="timeStamp" value="132" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DotNet Breakpoints">
-          <url>file://$PROJECT_DIR$/Assets/Scripts/Game/Player.cs</url>
-          <line>174</line>
-          <properties documentPath="D:\My Stuff\Computer science\Projects\Networks project\Assets\Scripts\Game\Player.cs" containingFunctionPresentation="Method 'HandleInput'">
-            <startOffsets>
-              <option value="6201" />
-            </startOffsets>
-            <endOffsets>
-              <option value="6240" />
-            </endOffsets>
-          </properties>
-          <option name="timeStamp" value="134" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
     <pin-to-top-manager>
       <pinned-members>
         <PinnedItemInfo parentTag="Type#Game.GameManager" memberName="localClient" />

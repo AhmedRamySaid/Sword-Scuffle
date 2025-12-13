@@ -22,7 +22,27 @@ namespace Game
         {
             if (Input.GetKeyDown(KeyCode.F11))
             {
-                Screen.fullScreen = !Screen.fullScreen;
+                ToggleFullscreen();
+            }
+        }
+
+        private void ToggleFullscreen()
+        {
+            if (Screen.fullScreenMode == FullScreenMode.Windowed)
+            {
+                Screen.SetResolution(
+                    Screen.currentResolution.width,
+                    Screen.currentResolution.height,
+                    FullScreenMode.FullScreenWindow
+                );
+            }
+            else
+            {
+                Screen.SetResolution(
+                    1280,
+                    720,
+                    FullScreenMode.Windowed
+                );
             }
         }
 

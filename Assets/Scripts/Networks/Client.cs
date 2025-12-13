@@ -312,6 +312,7 @@ namespace Networks
         public void StopClient()
         {
             Connected = false;
+            SendConnection(false);
             udpClient?.Close();
             receiveThread?.Join();
             LogToFile("=== UDP Client Stopped ===");
