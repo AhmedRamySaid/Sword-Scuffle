@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Game
@@ -111,6 +112,7 @@ namespace Game
 
         private void HandleGrounded()
         {
+            if (!currentData.isAlive) return;
             bool sensorState = mGroundSensor.State();
             if (!mGrounded && sensorState)
             {
@@ -126,7 +128,7 @@ namespace Game
 
         private void HandleInput()
         {
-            if (!isPlayer) return;
+            if (!isPlayer || !currentData.isAlive) return;
 
             float inputX = Input.GetAxisRaw("Horizontal");
             float inputY = Input.GetAxisRaw("Vertical");
@@ -212,6 +214,27 @@ namespace Game
             currentData.mTimeSinceAttack = 0.0f;
         }
 
+        private void KillPlayer()
+        {
+            currentData.isAlive = false;
+            mAnimator.SetTrigger(HashDeath);
+            StartCoroutine(RespawnAfterDelay());
+        }
+
+        private IEnumerator RespawnAfterDelay()
+        {
+            yield return new WaitForSeconds(5f);
+            Respawn();
+        }
+
+        private void  Respawn()
+        {
+            currentData.isAlive = true;
+            currentData.health = 3;
+            gameObject.transform.position = new Vector3(0,0,0);
+            mAnimator.SetTrigger(HashJump);
+        }
+
         private void UpdateAttackingStateMachine()
         {
             AnimatorStateInfo state = mAnimator.GetCurrentAnimatorStateInfo(0);
@@ -263,6 +286,18 @@ namespace Game
 
         private void UpdateAnimator()
         {
+            if (!currentData.isAlive)
+            {
+                AnimatorStateInfo state = mAnimator.GetCurrentAnimatorStateInfo(0);
+                bool isDead = state.IsName("Death");
+                if (!isDead)
+                {
+                    mAnimator.SetTrigger(HashDeath);
+                }
+
+                return;
+            }
+
             mAnimator.SetBool(HashWallSlide, mIsWallSliding);
             mAnimator.SetFloat(HashAirSpeedY, mBody2d.velocity.y);
         }
@@ -297,7 +332,12 @@ namespace Game
 
         private void TakeDamage()
         {
+            if (currentData.health <= 0) return;
             mAnimator.SetTrigger(HashHurt);
+            if (--currentData.health <= 0)
+            {
+                KillPlayer();
+            }
         }
 
         public PlayerData GetDeltaData()
