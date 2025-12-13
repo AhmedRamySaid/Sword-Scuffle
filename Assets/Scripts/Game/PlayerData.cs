@@ -16,7 +16,10 @@ namespace Game
         public float mTimeSinceAttack;
         public float xPos;
         public float yPos;
-
+        
+        public int health;
+        public bool isAlive;
+        
         public bool rollingChanged;
         public bool attackingChanged;
         public bool blockingChanged;
@@ -30,6 +33,8 @@ namespace Game
             mCurrentAttack = 1;
             xPos = 0;
             yPos = 0;
+            health = 3;
+            isAlive = true;
         }
 
         public void CopyData(PlayerData pd)
