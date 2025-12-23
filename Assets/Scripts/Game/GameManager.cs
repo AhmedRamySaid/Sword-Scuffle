@@ -127,6 +127,7 @@ namespace Game
         {
             Players.Remove(0);
             Players.Add(id, player);
+            player.currentData.id = id;
         }
 
         private void OnApplicationQuit()

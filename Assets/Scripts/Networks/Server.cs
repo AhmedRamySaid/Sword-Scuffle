@@ -29,6 +29,13 @@ namespace Networks
         private uint nextSnapshotId = 1;
         private Dictionary<IPEndPoint, uint> latestSequences;
         private Thread keyframeThread;
+        private long totalBandwidth = 0;
+        private float currentCpuUsage = 0;
+        private System.Diagnostics.Process currentProcess;
+        private float lastCpuTime = 0;
+        private DateTime lastSampleTime;
+
+        private string csvLogPath;
 
         public void InitializeServer()
         {
@@ -36,9 +43,16 @@ namespace Networks
             players = new Dictionary<uint, PlayerData>();
             lastSentData = new Dictionary<uint, PlayerData>();
             logFilePath = Path.Combine(Application.persistentDataPath, "server_logs.txt");
+            csvLogPath = Path.Combine(Application.persistentDataPath, "server_logs.csv");
             latestSequences = new Dictionary<IPEndPoint, uint>();
             
-            LogToFile("=== UDP Server Started ===");
+            LogToFile("=== UDP Server Started (CSV Logging Active) ===");
+            
+            if (File.Exists(csvLogPath)) File.Delete(csvLogPath);
+            
+            currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+            lastCpuTime = (float)currentProcess.TotalProcessorTime.TotalMilliseconds;
+            lastSampleTime = DateTime.UtcNow;
 
             IsRunning = true;
             serverThread = new Thread(StartServer);
@@ -105,14 +119,36 @@ namespace Networks
                 }
 
                 Thread.Sleep(delayMs);
+
+                // Phase 2: Track Server Performance Metrics
+                if (nextSnapshotId % KeyframeRateHz == 0)
+                {
+                    UpdateCpuUsage();
+                }
             }
+        }
+
+        private void UpdateCpuUsage()
+        {
+            try
+            {
+                DateTime now = DateTime.UtcNow;
+                float currentTotalCpuTime = (float)currentProcess.TotalProcessorTime.TotalMilliseconds;
+                double elapsedMs = (now - lastSampleTime).TotalMilliseconds;
+                if (elapsedMs > 10)
+                {
+                    currentCpuUsage = (currentTotalCpuTime - lastCpuTime) / (float)elapsedMs / Environment.ProcessorCount * 100f;
+                    currentCpuUsage = Mathf.Clamp(currentCpuUsage, 0, 100);
+                    lastCpuTime = currentTotalCpuTime;
+                    lastSampleTime = now;
+                }
+            } catch {}
         }
         
         private void HandlePacket(byte[] data, IPEndPoint sender)
         {
             try
             {
-                // Convert bytes into a NetPacket
                 NetPacket packet = NetPacket.FromBytes(data);
                 
                 switch (packet.msgType)
@@ -164,7 +200,6 @@ namespace Networks
                         }
                         
                         if (packetKeyframe < latestKeyframe) return; // Part of an older keyframe
-                        // Older sequences in the same keyframe are fine
                         string payload = Encoding.ASCII.GetString(packet.payload);
                         PlayerData deltaData = PlayerData.ParseSingularData(payload);
                         
@@ -187,7 +222,6 @@ namespace Networks
                         }
                         
                         if (packetKf < latestKf) return; // Part of an older keyframe
-                        // Older sequences in the same keyframe are fine
                         
                         string strPayload = Encoding.ASCII.GetString(packet.payload);
                         PlayerData realData = PlayerData.ParseSingularData(strPayload);
@@ -221,11 +255,10 @@ namespace Networks
                 payload = payloadBytes,
                 payloadLength = (ushort)payloadBytes.Length
             };
-            byte[] data = packet.ToBytes();
 
             foreach (IPEndPoint clientId in receivers)
             {
-                udpServer.Send(data, data.Length, clientId);  
+                SendData(packet, clientId);
             }
         }
 
@@ -261,7 +294,6 @@ namespace Networks
                 sb.Append(';');
             }
 
-            // Remove the trailing semi-column if present
             if (sb.Length > 0)
                 sb.Length--;
             
@@ -277,17 +309,13 @@ namespace Networks
                 payload = payloadBytes,
                 payloadLength = (ushort)payloadBytes.Length
             };
-            byte[] data = packet.ToBytes();
 
             foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
             {
-                udpServer.Send(data, data.Length, clientId.Key);  
+                SendData(packet, clientId.Key);
             }
         }
         
-        /*
-         * Different clients are seperated by a ';'
-         */
         private void SendKeyframe(bool isPeriodicalKeyframe)
         {
             IPEndPoint[] receivers = clientIds.Keys.ToArray();
@@ -318,7 +346,6 @@ namespace Networks
                 }
             }
 
-            // Remove the trailing semi-column if present
             if (sb.Length > 0)
                 sb.Length--;
             
@@ -334,34 +361,12 @@ namespace Networks
                 payload = payloadBytes,
                 payloadLength = (ushort)payloadBytes.Length
             };
-            byte[] data = packet.ToBytes();
 
             if (isPeriodicalKeyframe) nextSnapshotId++;
             
-            LogToFile("Sent keyframe:\n" + packet.ToString());
-            
             foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
             {
-                udpServer.Send(data, data.Length, clientId.Key);  
-            }
-        }
-
-        private void BroadcastToClients(byte[] data, IPEndPoint sender = null)
-        {
-            foreach (var pair in clientIds)
-            {
-                var clientEP = pair.Key;
-                // skip sender
-                if (sender != null && clientEP.Equals(sender)) continue;
-
-                try
-                {
-                    udpServer.Send(data, data.Length, clientEP);
-                }
-                catch (Exception e)
-                {
-                    LogToFile($"Failed to send to {clientEP}: {e.Message}");
-                }
+                SendData(packet, clientId.Key);
             }
         }
 
@@ -377,8 +382,21 @@ namespace Networks
                 payload = payloadBytes,
                 payloadLength = (ushort)payloadBytes.Length
             };
+
+            SendData(packet, sender);
+        }
+
+        private void SendData(NetPacket packet, IPEndPoint sender)
+        {
+            // Populate metrics for logging
+            if (clientIds.TryGetValue(sender, out uint cid)) packet.clientId = cid;
+            packet.cpuPercent = currentCpuUsage;
+            packet.bandwidthKbps = totalBandwidth / 1024f; // Current measured KB since last snapshot
+
+            NetPacketCsvLogger.Log(csvLogPath, packet);
             
             byte[] data = packet.ToBytes();
+            totalBandwidth += data.Length; // Track bandwidth for Phase 2
             udpServer.Send(data, data.Length, sender);
         }
 

@@ -397,6 +397,7 @@ namespace Game
             targetPosition = new Vector2(currentData.xPos + deltaData.xPos, currentData.yPos + deltaData.yPos);
             currentData.xPos += deltaData.xPos;
             currentData.yPos += deltaData.yPos;
+            currentData.id = deltaData.id;
         }
 
         public PlayerData GetRealData()
@@ -448,6 +449,7 @@ namespace Game
             targetPosition = new Vector2(data.xPos, data.yPos);
             currentData.xPos = data.xPos;
             currentData.yPos = data.yPos;
+            currentData.id = data.id;
         }
     }
 }

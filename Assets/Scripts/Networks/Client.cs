@@ -21,6 +21,9 @@ namespace Networks
         private string logFilePath;
         private uint nextSeqNum = 0;
         private uint latestSnapshot = 0;
+        private uint myClientId = 0;
+        private float lastLatency = 0;
+        private long totalBandwidth = 0;
             
         private IPEndPoint serverEndPoint;
         private Thread keyframeThread;
@@ -122,6 +125,7 @@ namespace Networks
                 while (Connected)
                 {
                     byte[] receivedBytes = udpClient.Receive(ref remoteEP); // blocking call
+                    totalBandwidth += receivedBytes.Length;
 
                     try
                     {
@@ -186,6 +190,28 @@ namespace Networks
                     if (packetKf < latestKf) return; // Part of an older keyframe
                     
                     latestSnapshot = packet.snapshotId;
+
+                    // Calculate Metrics
+                    long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    float posError = 0;
+                    try {
+                        PlayerData[] pData = PlayerData.ParseData(payloadStr);
+                        foreach(var pd in pData) {
+                            if (GameManager.Instance.Players.TryGetValue(pd.id, out Player p)) {
+                                posError += Vector2.Distance(new Vector2(p.currentData.xPos, p.currentData.yPos), new Vector2(pd.xPos, pd.yPos));
+                            }
+                        }
+                    } catch {}
+
+                    // Phase 2: Log Metrics using the new CsvLogger
+                    packet.clientId = myClientId;
+                    packet.recvTimeMs = now;
+                    packet.posError = posError;
+                    packet.bandwidthKbps = totalBandwidth / 1024f;
+
+                    string csvPath = Path.Combine(Application.persistentDataPath, "client_logs.csv");
+                    NetPacketCsvLogger.Log(csvPath, packet);
+                    totalBandwidth = 0;
                     
                     try
                     {
@@ -235,6 +261,7 @@ namespace Networks
                         UnityMainThreadDispatcher.Instance().Enqueue(() =>
                         {
                             GameManager.Instance.ApplyClientId(playerId);
+                            myClientId = playerId;
                         });
                     }
                     break;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Networks
@@ -15,12 +14,12 @@ namespace Networks
         KEYFRAME = 4,
         ID_SET = 5
     }
-
+    
     public class NetPacket
     {
         public const string PROTOCOL_ID = "LABA"; // 4 ASCII chars
         public const byte VERSION = 1;
-
+       
         public MessageType msgType;
         public uint snapshotId;
         public uint seqNum;
@@ -29,8 +28,17 @@ namespace Networks
         public byte[] payload;
         public uint checksum;
         
+        // Performance Metrics (for logging only, not serialized in ToBytes)
+        public uint clientId;
+        public long recvTimeMs;
+        public float cpuPercent;
+        public float posError;
+        public float bandwidthKbps;
+
         // CRC32 lookup table for polynomial 0xEDB88320 (reversed form of 0x04C11DB7)
         private static readonly uint[] Crc32Table = InitializeCrc32Table();
+        public static string CsvHeader =>
+            "client_id,snapshot_id,seq_num,server_timestamp_ms,recv_time_ms,latency_ms,jitter_ms,perceived_position_error,cpu_percent,bandwidth_per_client_kbps,msg_type,payload_length,checksum,protocol_id,version";
 
         public byte[] ToBytes(bool includeChecksum = false)
         {
@@ -70,24 +78,17 @@ namespace Networks
                 if (version != VERSION)
                     throw new InvalidDataException("Version mismatch");
 
-                // Read the fixed fields first
                 MessageType msgType = (MessageType)reader.ReadByte();
                 uint snapshotId = reader.ReadUInt32();
                 uint seqNum = reader.ReadUInt32();
                 long serverTimestamp = reader.ReadInt64();
-
-                // Read payload length
                 ushort payloadLength = reader.ReadUInt16();
-
-                // Now read exactly payloadLength bytes
                 byte[] payload = reader.ReadBytes(payloadLength);
 
-                // Optional checksum
                 uint checksum = 0;
                 if (hasChecksum)
                 {
                     checksum = reader.ReadUInt32();
-                    // Validate checksum - calculate on everything except the checksum field itself
                     byte[] dataWithoutChecksum = new byte[data.Length - 4];
                     Array.Copy(data, 0, dataWithoutChecksum, 0, data.Length - 4);
                     uint calculated = Crc32(dataWithoutChecksum);
@@ -97,8 +98,7 @@ namespace Networks
                     }
                 }
 
-                // Build the packet instance
-                NetPacket packet = new NetPacket
+                return new NetPacket
                 {
                     msgType = msgType,
                     snapshotId = snapshotId,
@@ -108,30 +108,23 @@ namespace Networks
                     payload = payload,
                     checksum = checksum
                 };
-
-                return packet;
             }
         }
-        
         
         private static uint[] InitializeCrc32Table()
         {
             uint[] table = new uint[256];
             const uint polynomial = 0xEDB88320u;
-
             for (uint i = 0; i < 256; i++)
             {
                 uint crc = i;
                 for (int j = 0; j < 8; j++)
                 {
-                    if ((crc & 1) != 0)
-                        crc = (crc >> 1) ^ polynomial;
-                    else
-                        crc >>= 1;
+                    if ((crc & 1) != 0) crc = (crc >> 1) ^ polynomial;
+                    else crc >>= 1;
                 }
                 table[i] = crc;
             }
-
             return table;
         }
         
@@ -140,13 +133,11 @@ namespace Networks
             unchecked
             {
                 uint crc = 0xFFFFFFFFu;
-
                 for (int i = 0; i < data.Length; i++)
                 {
                     byte index = (byte)((crc ^ data[i]) & 0xFF);
                     crc = (crc >> 8) ^ Crc32Table[index];
                 }
-
                 return ~crc;
             }
         }
@@ -156,6 +147,29 @@ namespace Networks
             return $"MsgType: {msgType}, SnapshotId: {snapshotId}, SeqNum: {seqNum}, " +
                    $"ServerTimestamp: {serverTimestamp}, PayloadLength: {payloadLength}, " +
                    $"Payload: {Encoding.ASCII.GetString(payload)}";
+        }
+        
+        public string ToCsvRow()
+        {
+            long latency = (recvTimeMs > 0) ? (recvTimeMs - serverTimestamp) : 0;
+            
+            return string.Join(",",
+                clientId,
+                snapshotId,
+                seqNum,
+                serverTimestamp,
+                recvTimeMs,
+                latency,
+                0, // Jitter placeholder
+                posError.ToString("F4"),
+                cpuPercent.ToString("F2"),
+                bandwidthKbps.ToString("F2"),
+                msgType,
+                payloadLength,
+                checksum,
+                PROTOCOL_ID,
+                VERSION
+            );
         }
     }
 }
