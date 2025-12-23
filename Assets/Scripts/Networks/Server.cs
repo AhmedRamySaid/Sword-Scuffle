@@ -221,11 +221,10 @@ namespace Networks
                 payload = payloadBytes,
                 payloadLength = (ushort)payloadBytes.Length
             };
-            byte[] data = packet.ToBytes();
 
             foreach (IPEndPoint clientId in receivers)
             {
-                udpServer.Send(data, data.Length, clientId);  
+                SendData(packet, clientId);
             }
         }
 
@@ -277,11 +276,10 @@ namespace Networks
                 payload = payloadBytes,
                 payloadLength = (ushort)payloadBytes.Length
             };
-            byte[] data = packet.ToBytes();
 
             foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
             {
-                udpServer.Send(data, data.Length, clientId.Key);  
+                SendData(packet, clientId.Key);
             }
         }
         
@@ -334,34 +332,12 @@ namespace Networks
                 payload = payloadBytes,
                 payloadLength = (ushort)payloadBytes.Length
             };
-            byte[] data = packet.ToBytes();
 
             if (isPeriodicalKeyframe) nextSnapshotId++;
             
-            LogToFile("Sent keyframe:\n" + packet.ToString());
-            
             foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
             {
-                udpServer.Send(data, data.Length, clientId.Key);  
-            }
-        }
-
-        private void BroadcastToClients(byte[] data, IPEndPoint sender = null)
-        {
-            foreach (var pair in clientIds)
-            {
-                var clientEP = pair.Key;
-                // skip sender
-                if (sender != null && clientEP.Equals(sender)) continue;
-
-                try
-                {
-                    udpServer.Send(data, data.Length, clientEP);
-                }
-                catch (Exception e)
-                {
-                    LogToFile($"Failed to send to {clientEP}: {e.Message}");
-                }
+                SendData(packet, clientId.Key);
             }
         }
 
@@ -377,6 +353,23 @@ namespace Networks
                 payload = payloadBytes,
                 payloadLength = (ushort)payloadBytes.Length
             };
+
+            SendData(packet, sender);
+        }
+
+        /*
+         * Middleware method to log data in a csv
+         */
+        private void SendData(NetPacket packet, IPEndPoint sender)
+        {
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                string path = Path.Combine(
+                    Application.persistentDataPath,
+                    "server_logs.csv"
+                );
+                NetPacketCsvLogger.Log(path, packet);
+            });
             
             byte[] data = packet.ToBytes();
             udpServer.Send(data, data.Length, sender);

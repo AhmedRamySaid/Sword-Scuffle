@@ -15,12 +15,12 @@ namespace Networks
         KEYFRAME = 4,
         ID_SET = 5
     }
-
+    
     public class NetPacket
     {
         public const string PROTOCOL_ID = "LABA"; // 4 ASCII chars
         public const byte VERSION = 1;
-
+       
         public MessageType msgType;
         public uint snapshotId;
         public uint seqNum;
@@ -31,6 +31,8 @@ namespace Networks
         
         // CRC32 lookup table for polynomial 0xEDB88320 (reversed form of 0x04C11DB7)
         private static readonly uint[] Crc32Table = InitializeCrc32Table();
+        public static string CsvHeader =>
+            "protocol_id,version,msg_type,snapshot_id,seq_num,server_timestamp,payload_length,payload,checksum";
 
         public byte[] ToBytes(bool includeChecksum = false)
         {
@@ -157,5 +159,24 @@ namespace Networks
                    $"ServerTimestamp: {serverTimestamp}, PayloadLength: {payloadLength}, " +
                    $"Payload: {Encoding.ASCII.GetString(payload)}";
         }
+        
+        public string ToCsvRow()
+        {
+            string payloadStr = Encoding.ASCII.GetString(payload);
+            payloadStr = payloadStr.Replace(",", " "); //Otherwise it'll count as a column
+            
+            return string.Join(",",
+                PROTOCOL_ID,
+                VERSION,
+                msgType,
+                snapshotId,
+                seqNum,
+                serverTimestamp,
+                payloadLength,
+                payloadStr,
+                checksum
+            );
+        }
+
     }
 }
