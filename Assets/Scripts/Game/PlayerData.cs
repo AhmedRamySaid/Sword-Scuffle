@@ -26,6 +26,9 @@ namespace Game
 
         public uint id;
 
+        public static string CsvHeader =>
+            "player_id,client_side_x_position,client_side_y_position,server_side_y_position,server_side_y_position";
+        
         public PlayerData()
         {
             mRolling = false;
@@ -203,6 +206,14 @@ namespace Game
             }
 
             return pd;
+        }
+        
+        public string ToCsvRow()
+        {
+            return string.Join(",",
+                xPos,
+                yPos
+            );
         }
     }
 }

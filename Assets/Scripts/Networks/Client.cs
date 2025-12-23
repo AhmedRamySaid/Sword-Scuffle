@@ -33,6 +33,9 @@ namespace Networks
 
         void StartConnection()
         {
+            // Delete CSV logs at startup
+            DeleteIfExists(Path.Combine(Application.persistentDataPath, "client_logs.txt"));
+            
             logFilePath = Path.Combine(Application.persistentDataPath, "client_logs.txt");
             LogToFile("=== UDP Client Started ===");
 
@@ -41,6 +44,21 @@ namespace Networks
             keyframeThread.Start();
         }
 
+        private void DeleteIfExists(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to delete file {path}: {e.Message}");
+            }
+        }
+        
         void ConnectToServer()
         {
             try

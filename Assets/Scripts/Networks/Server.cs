@@ -38,6 +38,12 @@ namespace Networks
             logFilePath = Path.Combine(Application.persistentDataPath, "server_logs.txt");
             latestSequences = new Dictionary<IPEndPoint, uint>();
             
+            // Delete CSV logs at startup
+            DeleteIfExists(Path.Combine(Application.persistentDataPath, "server_logs.csv"));
+            DeleteIfExists(Path.Combine(Application.persistentDataPath, "server_received_logs.csv"));
+            DeleteIfExists(Path.Combine(Application.persistentDataPath, "player_logs.csv"));
+            DeleteIfExists(Path.Combine(Application.persistentDataPath, "server_logs.txt"));
+            
             LogToFile("=== UDP Server Started ===");
 
             IsRunning = true;
@@ -46,6 +52,21 @@ namespace Networks
             
             keyframeThread = new Thread(KeyframeLoop);
             keyframeThread.Start();
+        }
+        
+        private void DeleteIfExists(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to delete file {path}: {e.Message}");
+            }
         }
         
         private void StartServer()
@@ -114,6 +135,18 @@ namespace Networks
             {
                 // Convert bytes into a NetPacket
                 NetPacket packet = NetPacket.FromBytes(data);
+                
+                /*
+                 * Log received messages
+                 */
+                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                {
+                    string path = Path.Combine(
+                        Application.persistentDataPath,
+                        "server_received_logs.csv"
+                    );
+                    NetPacketCsvLogger.Log(path, packet);
+                });
                 
                 switch (packet.msgType)
                 {
@@ -194,6 +227,19 @@ namespace Networks
                         
                         latestSequences[sender] = packet.seqNum;
                         PlayerData currentPlayerData = players[clientIds[sender]];
+                        
+                        /*
+                         * Log player data
+                         */
+                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                        {
+                            string path = Path.Combine(
+                                Application.persistentDataPath,
+                                "player_logs.csv"
+                            );
+                            NetPacketCsvLogger.LogPlayer(path, realData, currentPlayerData, clientIds[sender]);
+                        });
+                        
                         currentPlayerData.CopyData(realData);
                         break;
                     default:

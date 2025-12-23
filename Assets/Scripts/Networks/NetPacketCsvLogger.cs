@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using Game;
 
 namespace Networks
 {
@@ -16,6 +17,26 @@ namespace Networks
                 }
 
                 writer.WriteLine(packet.ToCsvRow());
+            }
+        }
+        
+        public static void LogPlayer(string filePath, PlayerData clientSideData, PlayerData serverSideData, uint id)
+        {
+            bool fileExists = File.Exists(filePath);
+
+            using (StreamWriter writer = new StreamWriter(filePath, append: true))
+            {
+                if (!fileExists)
+                {
+                    writer.WriteLine(PlayerData.CsvHeader);
+                }
+
+
+                writer.WriteLine(
+                    $"{id}," +
+                    $"{clientSideData.ToCsvRow()}," +
+                    $"{serverSideData.ToCsvRow()}"
+                );
             }
         }
     }

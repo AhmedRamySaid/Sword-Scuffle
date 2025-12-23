@@ -6,7 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/NetPacket.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/NetPacket.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Game/PlayerData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Game/PlayerData.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/NetPacketCsvLogger.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/NetPacketCsvLogger.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -38,6 +40,7 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/23/003917f7/FileStream.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/25/dace89c3/KeyValuePair`2.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/2e/db75a0dd/ExceptionDispatchInfo.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/74/c1d54cde/Encoding.cs" root0="FORCE_HIGHLIGHTING" />
@@ -45,6 +48,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/8f/75e29d71/Dictionary`2.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/9e/1cc76747/SystemException.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/ab/38fb9b18/StringBuilder.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/e4/15199bba/TextWriter.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/ec/321329c5/Exception.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/f6/4d014b7f/ThrowHelper.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/51fded79cd284d4d911c5949aff4cb2146ac00/fd/9814d66c/UInt32.cs" root0="FORCE_HIGHLIGHTING" />
@@ -110,20 +114,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Attach to Unity Editor.Attach to Unity Editor.executor": "Debug",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "XThreadsFramesViewSplitterKey": "0.07589286",
-    "git-widget-placeholder": "csv-logger",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Attach to Unity Editor.Attach to Unity Editor.executor&quot;: &quot;Debug&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;XThreadsFramesViewSplitterKey&quot;: &quot;0.07589286&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;csv-logger&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Attach to Unity Editor.Attach to Unity Editor">
     <configuration name="Standalone Player" type="RunUnityExe" factoryName="Unity Executable">
       <option name="EXE_PATH" value="$PROJECT_DIR$/Bin\Sword Scuffle.exe" />
@@ -159,10 +163,10 @@
       </option>
       <method v="2" />
     </configuration>
-    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost" ignored-value-for-modified-check="5468">
+    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost" ignored-value-for-modified-check="29536">
       <option name="allowRunningInParallel" value="false" />
       <option name="listenPortForConnections" value="false" />
-      <option name="pid" value="5468" />
+      <option name="pid" value="29536" />
       <option name="projectPathOnTarget" />
       <option name="selectedOptions">
         <list />
@@ -196,7 +200,8 @@
       <workItem from="1765562051081" duration="4975000" />
       <workItem from="1765637409199" duration="8951000" />
       <workItem from="1765652356982" duration="2060000" />
-      <workItem from="1766446173867" duration="1977000" />
+      <workItem from="1766446173867" duration="2714000" />
+      <workItem from="1766493021655" duration="2664000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -518,7 +523,15 @@
       <option name="project" value="LOCAL" />
       <updated>1765653624203</updated>
     </task>
-    <option name="localTasksCounter" value="41" />
+    <task id="LOCAL-00041" summary="Server now logs messages to a csv file">
+      <option name="closed" value="true" />
+      <created>1766448515894</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1766448515894</updated>
+    </task>
+    <option name="localTasksCounter" value="42" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -545,7 +558,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
-    <MESSAGE value="Now you can establish multiple connections" />
     <MESSAGE value="Broadcast frameworks to the client that joins" />
     <MESSAGE value="Implemented snapshots and keyframes" />
     <MESSAGE value="Yay now they talk together :D" />
@@ -570,26 +582,10 @@
     <MESSAGE value="Added more things" />
     <MESSAGE value="Added DEATH" />
     <MESSAGE value="Iunno anymore" />
-    <option name="LAST_COMMIT_MESSAGE" value="Iunno anymore" />
+    <MESSAGE value="Server now logs messages to a csv file" />
+    <option name="LAST_COMMIT_MESSAGE" value="Server now logs messages to a csv file" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="DotNet Breakpoints">
-          <url>file://$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs</url>
-          <line>281</line>
-          <properties documentPath="D:\My Stuff\Computer science\Projects\Networks project\Assets\Scripts\Networks\Server.cs" containingFunctionPresentation="Method 'SendSnapshot'">
-            <startOffsets>
-              <option value="10661" />
-            </startOffsets>
-            <endOffsets>
-              <option value="10692" />
-            </endOffsets>
-          </properties>
-          <option name="timeStamp" value="14" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
     <pin-to-top-manager>
       <pinned-members>
         <PinnedItemInfo parentTag="Type#Game.GameManager" memberName="localClient" />
