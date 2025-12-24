@@ -266,14 +266,18 @@ namespace Networks
             PlayerData realData = PlayerData.ParseSingularData(strPayload);
 
             latestSequences[sender] = packet.seqNum;
+            
             PlayerData currentPlayerData = players[clientIds[sender]];
+            PlayerData clientSnapshot = realData.Clone();  // deep copy
+            PlayerData serverSnapshot = currentPlayerData.Clone();  // deep copy before modifying
 
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
                 string path = Path.Combine(Application.persistentDataPath, "player_logs.csv");
-                NetPacketCsvLogger.LogPlayer(path, packet.serverTimestamp, realData, currentPlayerData, clientIds[sender]);
+                NetPacketCsvLogger.LogPlayer(path, packet.serverTimestamp, clientSnapshot, serverSnapshot, clientIds[sender]);
             });
 
+            // Now safely copy data for server update
             currentPlayerData.CopyData(realData);
         }
 

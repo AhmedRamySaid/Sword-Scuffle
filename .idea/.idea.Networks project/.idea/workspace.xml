@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="Implemented test changes" />
+    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="New build">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -200,7 +203,7 @@
       <workItem from="1766493021655" duration="2773000" />
       <workItem from="1766577715848" duration="2482000" />
       <workItem from="1766586331385" duration="1291000" />
-      <workItem from="1766610622957" duration="6388000" />
+      <workItem from="1766610622957" duration="7613000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -562,7 +565,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766616677264</updated>
     </task>
-    <option name="localTasksCounter" value="46" />
+    <task id="LOCAL-00046" summary="New build">
+      <option name="closed" value="true" />
+      <created>1766617083631</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1766617083631</updated>
+    </task>
+    <option name="localTasksCounter" value="47" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -589,7 +600,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
-    <MESSAGE value="Added test scripts to run the server and client" />
     <MESSAGE value="Refactoring" />
     <MESSAGE value="Implemented dealing with a player joining" />
     <MESSAGE value="Implemented handling of client keyframes" />
@@ -614,7 +624,8 @@
     <MESSAGE value="Changed tests" />
     <MESSAGE value="Changed test to calculate bandwidth" />
     <MESSAGE value="Implemented test changes" />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented test changes" />
+    <MESSAGE value="New build" />
+    <option name="LAST_COMMIT_MESSAGE" value="New build" />
   </component>
   <component name="XDebuggerManager">
     <pin-to-top-manager>

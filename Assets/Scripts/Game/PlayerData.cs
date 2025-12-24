@@ -155,6 +155,13 @@ namespace Game
             return players.ToArray();
         }
 
+        public PlayerData Clone()
+        {
+            PlayerData copy = new PlayerData();
+            copy.CopyData(this); // Assuming CopyData copies all fields
+            return copy;
+        }
+        
         public static PlayerData ParseSingularData(string input)
         {
             PlayerData pd = new PlayerData();
