@@ -27,7 +27,7 @@ namespace Game
         public uint id;
 
         public static string CsvHeader =>
-            "player_id,client_side_x_position,client_side_y_position,server_side_y_position,server_side_y_position";
+            "player_id,server_timestamp,client_side_x_position,client_side_y_position,server_side_x_position,server_side_y_position";
         
         public PlayerData()
         {

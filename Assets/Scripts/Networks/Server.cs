@@ -237,7 +237,7 @@ namespace Networks
                                 Application.persistentDataPath,
                                 "player_logs.csv"
                             );
-                            NetPacketCsvLogger.LogPlayer(path, realData, currentPlayerData, clientIds[sender]);
+                            NetPacketCsvLogger.LogPlayer(path,packet.serverTimestamp , realData, currentPlayerData, clientIds[sender]);
                         });
                         
                         currentPlayerData.CopyData(realData);

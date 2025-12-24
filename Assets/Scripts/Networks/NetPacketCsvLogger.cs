@@ -20,7 +20,7 @@ namespace Networks
             }
         }
         
-        public static void LogPlayer(string filePath, PlayerData clientSideData, PlayerData serverSideData, uint id)
+        public static void LogPlayer(string filePath, long timestamp, PlayerData clientSideData, PlayerData serverSideData, uint id)
         {
             bool fileExists = File.Exists(filePath);
 
@@ -34,6 +34,7 @@ namespace Networks
 
                 writer.WriteLine(
                     $"{id}," +
+                    $"{timestamp}," +
                     $"{clientSideData.ToCsvRow()}," +
                     $"{serverSideData.ToCsvRow()}"
                 );
