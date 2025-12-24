@@ -206,7 +206,10 @@ namespace Networks
                 LogToFile("Packet handling error: " + e.Message);
             }
         }
-
+        
+        /*
+         * Handles a new client connecting to the server 
+         */
         private void HandleConnect(NetPacket packet, IPEndPoint sender)
         {
             if (((char)(packet.payload[0])).Equals('1'))
@@ -252,7 +255,7 @@ namespace Networks
             PlayerData playerData = players[clientIds[sender]];
             playerData.Add(deltaData);
         }
-
+        
         private void HandleKeyframe(NetPacket packet, IPEndPoint sender)
         {
             int latestKf = latestSequences.TryGetValue(sender, out uint seqNumber) ? (int)seqNumber / KeyframeRateHz : (int)packet.seqNum / KeyframeRateHz;

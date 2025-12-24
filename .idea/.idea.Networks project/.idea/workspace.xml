@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="New build">
+    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="Fixed small bug">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,7 +54,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/f1e29a71158e46cdb750140a667aea01175e00/c1/c888376b/UnityException.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Game/Player.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Game/PlayerData.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="mock://D:/My Stuff/Computer science/Projects/Networks project/Assets/Scripts/Networks/NetPacketCsvLogger.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://D:/My Stuff/Computer science/Projects/Networks project/Assets/Scripts/Game/PlayerData.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.burst@1.8.16/Tests/Editor/BurstDisassemblerTests.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.burst@1.8.16/Tests/Editor/BurstReflectionTests.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.burst@1.8.16/Tests/Runtime/Shared/030-Expressions.cs" root0="SKIP_HIGHLIGHTING" />
@@ -203,7 +202,7 @@
       <workItem from="1766493021655" duration="2773000" />
       <workItem from="1766577715848" duration="2482000" />
       <workItem from="1766586331385" duration="1291000" />
-      <workItem from="1766610622957" duration="7613000" />
+      <workItem from="1766610622957" duration="8456000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -573,7 +572,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766617083631</updated>
     </task>
-    <option name="localTasksCounter" value="47" />
+    <task id="LOCAL-00047" summary="Fixed small bug">
+      <option name="closed" value="true" />
+      <created>1766618457329</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1766618457329</updated>
+    </task>
+    <option name="localTasksCounter" value="48" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -600,7 +607,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
-    <MESSAGE value="Refactoring" />
     <MESSAGE value="Implemented dealing with a player joining" />
     <MESSAGE value="Implemented handling of client keyframes" />
     <MESSAGE value="Fixed keyframes sent by server" />
@@ -625,7 +631,8 @@
     <MESSAGE value="Changed test to calculate bandwidth" />
     <MESSAGE value="Implemented test changes" />
     <MESSAGE value="New build" />
-    <option name="LAST_COMMIT_MESSAGE" value="New build" />
+    <MESSAGE value="Fixed small bug" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed small bug" />
   </component>
   <component name="XDebuggerManager">
     <pin-to-top-manager>
