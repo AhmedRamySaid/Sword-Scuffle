@@ -6,7 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/NetPacketCsvLogger.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/NetPacketCsvLogger.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Client.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -163,10 +163,10 @@
       </option>
       <method v="2" />
     </configuration>
-    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost">
+    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost" ignored-value-for-modified-check="23100">
       <option name="allowRunningInParallel" value="false" />
       <option name="listenPortForConnections" value="false" />
-      <option name="pid" />
+      <option name="pid" value="23100" />
       <option name="projectPathOnTarget" />
       <option name="selectedOptions">
         <list />
@@ -203,7 +203,8 @@
       <workItem from="1766446173867" duration="2714000" />
       <workItem from="1766493021655" duration="2773000" />
       <workItem from="1766577715848" duration="2482000" />
-      <workItem from="1766586331385" duration="1122000" />
+      <workItem from="1766586331385" duration="1291000" />
+      <workItem from="1766610622957" duration="5932000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -549,7 +550,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766580401502</updated>
     </task>
-    <option name="localTasksCounter" value="44" />
+    <task id="LOCAL-00044" summary="Changed test to calculate bandwidth">
+      <option name="closed" value="true" />
+      <created>1766587572867</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1766587572867</updated>
+    </task>
+    <option name="localTasksCounter" value="45" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -576,7 +585,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
-    <MESSAGE value="Yay now they talk together :D" />
     <MESSAGE value="Working!!!" />
     <MESSAGE value="Added test scripts to run the server and client" />
     <MESSAGE value="Refactoring" />
@@ -601,7 +609,8 @@
     <MESSAGE value="Server now logs messages to a csv file" />
     <MESSAGE value="Server now logs player data" />
     <MESSAGE value="Changed tests" />
-    <option name="LAST_COMMIT_MESSAGE" value="Changed tests" />
+    <MESSAGE value="Changed test to calculate bandwidth" />
+    <option name="LAST_COMMIT_MESSAGE" value="Changed test to calculate bandwidth" />
   </component>
   <component name="XDebuggerManager">
     <pin-to-top-manager>

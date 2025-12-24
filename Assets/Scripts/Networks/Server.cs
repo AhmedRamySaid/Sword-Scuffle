@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -17,58 +18,72 @@ namespace Networks
 
         private UdpClient udpServer;
         private Thread serverThread;
+        private Thread keyframeThread;
+        private Thread cpuLoggerThread;
 
         private const int Port = 5555;
         private string logFilePath;
+        private string cpuLogPath;
         private Dictionary<IPEndPoint, uint> clientIds;
         private Dictionary<uint, PlayerData> players;
         private Dictionary<uint, PlayerData> lastSentData;
         private uint nextPlayerId = 1; // player ids start at 1, the client treats itself as 0
-        
         public static readonly int KeyframeRateHz = 20;
         private uint nextSnapshotId = 1;
         private Dictionary<IPEndPoint, uint> latestSequences;
-        private Thread keyframeThread;
+        
+        private Process currentProcess;
+        private TimeSpan prevTotalProcessorTime;
+        private DateTime prevTime;
 
         public void InitializeServer()
         {
             clientIds = new Dictionary<IPEndPoint, uint>();
             players = new Dictionary<uint, PlayerData>();
             lastSentData = new Dictionary<uint, PlayerData>();
-            logFilePath = Path.Combine(Application.persistentDataPath, "server_logs.txt");
             latestSequences = new Dictionary<IPEndPoint, uint>();
-            
+            logFilePath = Path.Combine(Application.persistentDataPath, "server_logs.txt");
+            currentProcess = Process.GetCurrentProcess();
+            // Get CPU log path on main thread
+            cpuLogPath = Path.Combine(Application.persistentDataPath, "cpu_logs.csv");
+
             // Delete CSV logs at startup
             DeleteIfExists(Path.Combine(Application.persistentDataPath, "server_logs.csv"));
             DeleteIfExists(Path.Combine(Application.persistentDataPath, "server_received_logs.csv"));
             DeleteIfExists(Path.Combine(Application.persistentDataPath, "player_logs.csv"));
+            DeleteIfExists(Path.Combine(Application.persistentDataPath, "cpu_logs.csv"));
             DeleteIfExists(Path.Combine(Application.persistentDataPath, "server_logs.txt"));
-            
+
             LogToFile("=== UDP Server Started ===");
 
             IsRunning = true;
+
+            // Start server thread
             serverThread = new Thread(StartServer);
             serverThread.Start();
-            
+
+            // Start keyframe loop
             keyframeThread = new Thread(KeyframeLoop);
             keyframeThread.Start();
+
+            // Start CPU logger loop
+            cpuLoggerThread = new Thread(CpuLoggerLoop);
+            cpuLoggerThread.Start();
         }
-        
+
         private void DeleteIfExists(string path)
         {
             try
             {
                 if (File.Exists(path))
-                {
                     File.Delete(path);
-                }
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to delete file {path}: {e.Message}");
+                UnityEngine.Debug.LogError($"Failed to delete file {path}: {e.Message}");
             }
         }
-        
+
         private void StartServer()
         {
             try
@@ -80,16 +95,14 @@ namespace Networks
 
                 while (IsRunning)
                 {
-                    byte[] receivedBytes = udpServer.Receive(ref remoteEP); // blocking call
+                    byte[] receivedBytes = udpServer.Receive(ref remoteEP);
                     HandlePacket(receivedBytes, remoteEP);
                 }
             }
             catch (SocketException se)
             {
                 if (IsRunning)
-                {
                     LogToFile("Socket error: " + se.Message);
-                }
             }
             catch (Exception e)
             {
@@ -110,15 +123,10 @@ namespace Networks
             {
                 try
                 {
-                    // Send to all clients
                     if (nextSnapshotId % KeyframeRateHz != 0)
-                    {
                         SendSnapshot();
-                    }
-                    else // One second has passed
-                    {
+                    else
                         SendKeyframe(true);
-                    }
                 }
                 catch (Exception e)
                 {
@@ -128,121 +136,68 @@ namespace Networks
                 Thread.Sleep(delayMs);
             }
         }
-        
+
+        private void CpuLoggerLoop()
+        {
+            // Initialize CSV header on main thread
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                if (!File.Exists(cpuLogPath))
+                    File.WriteAllText(cpuLogPath, "timestamp_ms,cpu_percent\n");
+            });
+            
+            prevTime = DateTime.UtcNow;
+            prevTotalProcessorTime = currentProcess.TotalProcessorTime;
+            int processorCount = Environment.ProcessorCount;
+
+            while (IsRunning)
+            {
+                Thread.Sleep(1000);
+
+                DateTime currentTime = DateTime.UtcNow;
+                TimeSpan currentTotalProcessorTime = currentProcess.TotalProcessorTime;
+
+                double cpuUsedMs = (currentTotalProcessorTime - prevTotalProcessorTime).TotalMilliseconds;
+                double totalMs = (currentTime - prevTime).TotalMilliseconds;
+                double cpuPercent = (cpuUsedMs / (totalMs * processorCount)) * 100.0;
+
+                long timestampMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                string line = $"{timestampMs},{cpuPercent:F2}\n";
+
+                // Dispatch CSV write to main thread
+                UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                {
+                    try { File.AppendAllText(cpuLogPath, line); }
+                    catch (Exception e) { UnityEngine.Debug.LogError("Failed to write CPU log: " + e.Message); }
+                });
+
+                prevTotalProcessorTime = currentTotalProcessorTime;
+                prevTime = currentTime;
+            }
+        }
+
         private void HandlePacket(byte[] data, IPEndPoint sender)
         {
             try
             {
-                // Convert bytes into a NetPacket
                 NetPacket packet = NetPacket.FromBytes(data);
-                
-                /*
-                 * Log received messages
-                 */
+
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                 {
-                    string path = Path.Combine(
-                        Application.persistentDataPath,
-                        "server_received_logs.csv"
-                    );
+                    string path = Path.Combine(Application.persistentDataPath, "server_received_logs.csv");
                     NetPacketCsvLogger.Log(path, packet, sender.ToString() + ',');
                 });
-                
+
                 switch (packet.msgType)
                 {
-                    case (MessageType.CONNECT):
-                        if (((char)(packet.payload[0])).Equals('1')) // Established a connection
-                        {
-                            uint playerId = nextPlayerId++;
-                            clientIds[sender] = playerId;
-                            PlayerData newPlayer = new PlayerData();
-                            players.Add(playerId, newPlayer);
-                            
-                            latestSequences[sender] = packet.seqNum;
-                            
-                            LogToFile($"Registered new client {sender} with PlayerID {playerId}");
-                            SendPlayerId(sender, playerId);
-                            
-                            var others = clientIds.Keys
-                                .Where(ep => !ep.Equals(sender))
-                                .ToList();
-                            SendJoinMessage(others, playerId, true);
-                        }
-                        else // Terminated the connection
-                        {
-                            if (clientIds.TryGetValue(sender, out uint playerId))
-                            {
-                                clientIds.Remove(sender);
-                                players.Remove(playerId);
-                                lastSentData.Remove(playerId);
-                                
-                                var others = clientIds.Keys
-                                    .Where(ep => !ep.Equals(sender))
-                                    .ToList();
-                                SendJoinMessage(others, playerId, false);
-                            }
-                        }
+                    case MessageType.CONNECT:
+                        HandleConnect(packet, sender);
                         break;
-                    case (MessageType.SNAPSHOT):
-                        int latestKeyframe = 0;
-                        int packetKeyframe = (int) packet.seqNum / KeyframeRateHz;
-                        
-                        if (latestSequences.TryGetValue(sender, out uint seqNum))
-                        {
-                            latestKeyframe = (int) seqNum / KeyframeRateHz;
-                        }
-                        else
-                        {
-                            latestKeyframe = packetKeyframe;
-                        }
-                        
-                        if (packetKeyframe < latestKeyframe) return; // Part of an older keyframe
-                        // Older sequences in the same keyframe are fine
-                        string payload = Encoding.ASCII.GetString(packet.payload);
-                        PlayerData deltaData = PlayerData.ParseSingularData(payload);
-                        
-                        latestSequences[sender] = packet.seqNum;
-                        PlayerData playerData = players[clientIds[sender]];
-                        playerData.Add(deltaData);
+                    case MessageType.SNAPSHOT:
+                        HandleSnapshot(packet, sender);
                         break;
-                    case (MessageType.KEYFRAME):
-                        int latestKf = 0;
-                        int packetKf = (int) packet.seqNum / KeyframeRateHz;
-                        LogToFile("Received keyframe:\n" + packet.ToString());
-                        
-                        if (latestSequences.TryGetValue(sender, out uint seqNumber))
-                        {
-                            latestKf = (int) seqNumber / KeyframeRateHz;
-                        }
-                        else
-                        {
-                            latestKf = packetKf;
-                        }
-                        
-                        if (packetKf < latestKf) return; // Part of an older keyframe
-                        // Older sequences in the same keyframe are fine
-                        
-                        string strPayload = Encoding.ASCII.GetString(packet.payload);
-                        PlayerData realData = PlayerData.ParseSingularData(strPayload);
-                        
-                        latestSequences[sender] = packet.seqNum;
-                        PlayerData currentPlayerData = players[clientIds[sender]];
-                        
-                        /*
-                         * Log player data
-                         */
-                        UnityMainThreadDispatcher.Instance().Enqueue(() =>
-                        {
-                            string path = Path.Combine(
-                                Application.persistentDataPath,
-                                "player_logs.csv"
-                            );
-                            NetPacketCsvLogger.LogPlayer(path,packet.serverTimestamp , realData, currentPlayerData, clientIds[sender]);
-                        });
-                        
-                        currentPlayerData.CopyData(realData);
-                        break;
-                    default:
+                    case MessageType.KEYFRAME:
+                        HandleKeyframe(packet, sender);
                         break;
                 }
             }
@@ -252,12 +207,82 @@ namespace Networks
             }
         }
 
+        private void HandleConnect(NetPacket packet, IPEndPoint sender)
+        {
+            if (((char)(packet.payload[0])).Equals('1'))
+            {
+                uint playerId = nextPlayerId++;
+                clientIds[sender] = playerId;
+                PlayerData newPlayer = new PlayerData();
+                players.Add(playerId, newPlayer);
+
+                latestSequences[sender] = packet.seqNum;
+
+                LogToFile($"Registered new client {sender} with PlayerID {playerId}");
+                SendPlayerId(sender, playerId);
+
+                var others = clientIds.Keys.Where(ep => !ep.Equals(sender)).ToList();
+                SendJoinMessage(others, playerId, true);
+            }
+            else
+            {
+                if (clientIds.TryGetValue(sender, out uint playerId))
+                {
+                    clientIds.Remove(sender);
+                    players.Remove(playerId);
+                    lastSentData.Remove(playerId);
+
+                    var others = clientIds.Keys.Where(ep => !ep.Equals(sender)).ToList();
+                    SendJoinMessage(others, playerId, false);
+                }
+            }
+        }
+
+        private void HandleSnapshot(NetPacket packet, IPEndPoint sender)
+        {
+            int latestKeyframe = latestSequences.TryGetValue(sender, out uint seqNum) ? (int)seqNum / KeyframeRateHz : (int)packet.seqNum / KeyframeRateHz;
+            int packetKeyframe = (int)packet.seqNum / KeyframeRateHz;
+
+            if (packetKeyframe < latestKeyframe) return;
+
+            string payload = Encoding.ASCII.GetString(packet.payload);
+            PlayerData deltaData = PlayerData.ParseSingularData(payload);
+
+            latestSequences[sender] = packet.seqNum;
+            PlayerData playerData = players[clientIds[sender]];
+            playerData.Add(deltaData);
+        }
+
+        private void HandleKeyframe(NetPacket packet, IPEndPoint sender)
+        {
+            int latestKf = latestSequences.TryGetValue(sender, out uint seqNumber) ? (int)seqNumber / KeyframeRateHz : (int)packet.seqNum / KeyframeRateHz;
+            int packetKf = (int)packet.seqNum / KeyframeRateHz;
+
+            if (packetKf < latestKf) return;
+
+            LogToFile("Received keyframe:\n" + packet.ToString());
+
+            string strPayload = Encoding.ASCII.GetString(packet.payload);
+            PlayerData realData = PlayerData.ParseSingularData(strPayload);
+
+            latestSequences[sender] = packet.seqNum;
+            PlayerData currentPlayerData = players[clientIds[sender]];
+
+            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+            {
+                string path = Path.Combine(Application.persistentDataPath, "player_logs.csv");
+                NetPacketCsvLogger.LogPlayer(path, packet.serverTimestamp, realData, currentPlayerData, clientIds[sender]);
+            });
+
+            currentPlayerData.CopyData(realData);
+        }
+
         private void SendJoinMessage(List<IPEndPoint> receivers, uint playerId, bool flag)
         {
             int joined = flag ? 1 : 0;
-            string payload = "ID:" + playerId.ToString() + "/" + joined.ToString();
+            string payload = "ID:" + playerId + "/" + joined;
             byte[] payloadBytes = Encoding.ASCII.GetBytes(payload);
-            
+
             NetPacket packet = new NetPacket
             {
                 msgType = MessageType.CONNECT,
@@ -269,24 +294,19 @@ namespace Networks
             };
 
             foreach (IPEndPoint clientId in receivers)
-            {
                 SendData(packet, clientId);
-            }
         }
 
         private void SendSnapshot()
         {
             IPEndPoint[] receivers = clientIds.Keys.ToArray();
-            var result = clientIds.
-                Where(kvps => receivers.Contains(kvps.Key))
-                .ToList();
             var sb = new StringBuilder();
 
-            foreach (KeyValuePair<IPEndPoint, uint> clientId in clientIds)
+            foreach (var clientId in clientIds)
             {
                 PlayerData playerData = players[clientId.Value];
                 PlayerData deltaData;
-                
+
                 if (lastSentData.TryGetValue(clientId.Value, out PlayerData oldData))
                 {
                     deltaData = PlayerData.SubtractData(playerData, oldData);
@@ -299,20 +319,17 @@ namespace Networks
                 }
 
                 string str = deltaData.ToDeltaString();
-                if (str.Equals("")) continue;
-
-                sb.Append($"{clientId.Value}|");
-                sb.Append(str);
-                sb.Append(';');
+                if (str != "")
+                {
+                    sb.Append($"{clientId.Value}|{str};");
+                }
             }
 
-            // Remove the trailing semi-column if present
-            if (sb.Length > 0)
-                sb.Length--;
-            
+            if (sb.Length > 0) sb.Length--; // remove trailing ;
+
             string payload = sb.ToString();
-            
             byte[] payloadBytes = Encoding.ASCII.GetBytes(payload);
+
             NetPacket packet = new NetPacket
             {
                 msgType = MessageType.SNAPSHOT,
@@ -323,37 +340,25 @@ namespace Networks
                 payloadLength = (ushort)payloadBytes.Length
             };
 
-            foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
-            {
-                SendData(packet, clientId.Key);
-            }
+            foreach (var clientId in receivers)
+                SendData(packet, clientId);
         }
-        
-        /*
-         * Different clients are seperated by a ';'
-         */
+
         private void SendKeyframe(bool isPeriodicalKeyframe)
         {
             IPEndPoint[] receivers = clientIds.Keys.ToArray();
-            var result = clientIds.
-                Where(kvps => receivers.Contains(kvps.Key))
-                .ToList();
             var sb = new StringBuilder();
 
-            foreach (KeyValuePair<IPEndPoint, uint> clientId in clientIds)
+            foreach (var clientId in clientIds)
             {
                 PlayerData playerData = players[clientId.Value];
-
                 string str = playerData.ToRealString();
-                if (str.Equals("")) continue;
+                if (str == "") continue;
 
-                sb.Append($"{clientId.Value}|");
-                sb.Append(str);
-                sb.Append(';');
+                sb.Append($"{clientId.Value}|{str};");
+
                 if (lastSentData.TryGetValue(clientId.Value, out PlayerData latestData))
-                {
                     latestData.CopyData(playerData);
-                }
                 else
                 {
                     PlayerData pd = new PlayerData();
@@ -362,13 +367,11 @@ namespace Networks
                 }
             }
 
-            // Remove the trailing semi-column if present
-            if (sb.Length > 0)
-                sb.Length--;
-            
+            if (sb.Length > 0) sb.Length--;
+
             string payload = sb.ToString();
-            
             byte[] payloadBytes = Encoding.ASCII.GetBytes(payload);
+
             NetPacket packet = new NetPacket
             {
                 msgType = MessageType.KEYFRAME,
@@ -380,16 +383,15 @@ namespace Networks
             };
 
             if (isPeriodicalKeyframe) nextSnapshotId++;
-            
-            foreach (KeyValuePair<IPEndPoint, uint> clientId in result)
-            {
-                SendData(packet, clientId.Key);
-            }
+
+            foreach (var clientId in receivers)
+                SendData(packet, clientId);
         }
 
         private void SendPlayerId(IPEndPoint sender, uint playerId)
         {
             byte[] payloadBytes = Encoding.ASCII.GetBytes(playerId.ToString());
+
             NetPacket packet = new NetPacket
             {
                 msgType = MessageType.ID_SET,
@@ -403,20 +405,14 @@ namespace Networks
             SendData(packet, sender);
         }
 
-        /*
-         * Middleware method to log data in a csv
-         */
         private void SendData(NetPacket packet, IPEndPoint sender)
         {
             UnityMainThreadDispatcher.Instance().Enqueue(() =>
             {
-                string path = Path.Combine(
-                    Application.persistentDataPath,
-                    "server_logs.csv"
-                );
+                string path = Path.Combine(Application.persistentDataPath, "server_logs.csv");
                 NetPacketCsvLogger.Log(path, packet);
             });
-            
+
             byte[] data = packet.ToBytes();
             udpServer.Send(data, data.Length, sender);
         }
@@ -426,6 +422,8 @@ namespace Networks
             IsRunning = false;
             udpServer?.Close();
             serverThread?.Join();
+            keyframeThread?.Join();
+            cpuLoggerThread?.Join();
             LogToFile("=== UDP Server Stopped ===");
         }
 
@@ -438,7 +436,7 @@ namespace Networks
             }
             catch (Exception e)
             {
-                Debug.LogError("Failed to write log: " + e.Message);
+                UnityEngine.Debug.LogError("Failed to write log: " + e.Message);
             }
         }
     }
