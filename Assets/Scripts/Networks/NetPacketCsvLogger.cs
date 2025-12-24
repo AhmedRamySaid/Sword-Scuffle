@@ -5,7 +5,10 @@ namespace Networks
 {
     public static class NetPacketCsvLogger
     {
-        public static void Log(string filePath, NetPacket packet)
+        /*
+         * clientIp must have , in the end to work correctly
+         */
+        public static void Log(string filePath, NetPacket packet, string clientIp = "")
         {
             bool fileExists = File.Exists(filePath);
 
@@ -13,10 +16,13 @@ namespace Networks
             {
                 if (!fileExists)
                 {
-                    writer.WriteLine(NetPacket.CsvHeader);
+                    string header = NetPacket.CsvHeader;
+                    if (clientIp != "") header = "client_ip_address," + header;
+
+                    writer.WriteLine(header);
                 }
 
-                writer.WriteLine(packet.ToCsvRow());
+                writer.WriteLine(clientIp + packet.ToCsvRow());
             }
         }
         

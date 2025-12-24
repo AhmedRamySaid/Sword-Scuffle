@@ -145,7 +145,7 @@ namespace Networks
                         Application.persistentDataPath,
                         "server_received_logs.csv"
                     );
-                    NetPacketCsvLogger.Log(path, packet);
+                    NetPacketCsvLogger.Log(path, packet, sender.ToString() + ',');
                 });
                 
                 switch (packet.msgType)
