@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="Basic comment changes" />
+    <list default="true" id="073018ba-8cee-4e8c-a75b-1a3973a0820c" name="Changes" comment="Latest build">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Networks project/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/NetPacketCsvLogger.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/NetPacketCsvLogger.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Networks/Server.cs" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -200,7 +204,7 @@
       <workItem from="1766493021655" duration="2773000" />
       <workItem from="1766577715848" duration="2482000" />
       <workItem from="1766586331385" duration="1291000" />
-      <workItem from="1766610622957" duration="8819000" />
+      <workItem from="1766610622957" duration="11413000" />
     </task>
     <task id="LOCAL-00001" summary="First commit">
       <option name="closed" value="true" />
@@ -586,7 +590,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766619532817</updated>
     </task>
-    <option name="localTasksCounter" value="49" />
+    <task id="LOCAL-00049" summary="Latest build">
+      <option name="closed" value="true" />
+      <created>1766619625188</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1766619625188</updated>
+    </task>
+    <option name="localTasksCounter" value="50" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -613,7 +625,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
-    <MESSAGE value="Implemented handling of client keyframes" />
     <MESSAGE value="Fixed keyframes sent by server" />
     <MESSAGE value="Server and client now apply movement and rolling data" />
     <MESSAGE value="Now blocking and attacking works" />
@@ -638,7 +649,8 @@
     <MESSAGE value="New build" />
     <MESSAGE value="Fixed small bug" />
     <MESSAGE value="Basic comment changes" />
-    <option name="LAST_COMMIT_MESSAGE" value="Basic comment changes" />
+    <MESSAGE value="Latest build" />
+    <option name="LAST_COMMIT_MESSAGE" value="Latest build" />
   </component>
   <component name="XDebuggerManager">
     <pin-to-top-manager>

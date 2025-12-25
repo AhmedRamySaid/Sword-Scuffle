@@ -181,11 +181,12 @@ namespace Networks
             try
             {
                 NetPacket packet = NetPacket.FromBytes(data);
-
+                long latency = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - packet.serverTimestamp;
+                
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                 {
                     string path = Path.Combine(Application.persistentDataPath, "server_received_logs.csv");
-                    NetPacketCsvLogger.Log(path, packet, sender.ToString() + ',');
+                    NetPacketCsvLogger.Log(path, packet, sender.ToString(), latency);
                 });
 
                 switch (packet.msgType)
