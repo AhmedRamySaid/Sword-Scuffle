@@ -22,7 +22,7 @@ namespace Networks
                 if (clientIp == "") writer.WriteLine(packet.ToCsvRow());
                 else
                 {
-                    string line = clientIp + "," + NetPacket.CsvHeader + "," + latency;
+                    string line = clientIp + "," + packet.ToCsvRow() + "," + latency;
                     writer.WriteLine(line);
                 }
             }

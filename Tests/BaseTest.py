@@ -21,7 +21,8 @@ def compute_metrics(folder_path, include_checksum=True):
         "client_side_y_position",
         "server_side_x_position",
         "server_side_y_position",
-        "payload_length"
+        "payload_length",
+        "latency"  # Include latency
     ]
     for df in [server_received, player_logs]:
         for col in numeric_cols:
@@ -36,8 +37,7 @@ def compute_metrics(folder_path, include_checksum=True):
 
     # Compute bandwidth per client
     bandwidth_per_client = server_received.groupby('client_ip_address').apply(
-        lambda df: df['total_bits'].sum() / (
-                    (df['server_timestamp'].max() - df['server_timestamp'].min()) / 1000) / 1000
+        lambda df: df['total_bits'].sum() / ((df['server_timestamp'].max() - df['server_timestamp'].min()) / 1000) / 1000
     )  # kbps
 
     # Merge player logs with server received packets on server_timestamp
@@ -67,6 +67,8 @@ def compute_metrics(folder_path, include_checksum=True):
         "perceived_position_error",
         "bandwidth_per_client_kbps"
     ]
+    if "latency" in merged.columns:
+        per_packet_cols.append("latency")
     per_packet_df = merged[per_packet_cols]
     per_packet_path = os.path.join(folder_path, "per_packet_metrics.csv")
     per_packet_df.to_csv(per_packet_path, index=False)
@@ -83,6 +85,16 @@ def compute_metrics(folder_path, include_checksum=True):
         "p95": np.percentile(pos_values, 95) if not pos_values.empty else np.nan
     })
 
+    # Latency stats
+    if "latency" in per_packet_df.columns:
+        latency_values = per_packet_df["latency"].dropna()
+        summary_rows.append({
+            "metric": "latency_ms",
+            "mean": latency_values.mean() if not latency_values.empty else np.nan,
+            "median": latency_values.median() if not latency_values.empty else np.nan,
+            "p95": np.percentile(latency_values, 95) if not latency_values.empty else np.nan
+        })
+
     # Total bandwidth stats
     summary_rows.append({
         "metric": "total_bandwidth_kbps",
@@ -91,7 +103,7 @@ def compute_metrics(folder_path, include_checksum=True):
         "p95": np.percentile(bandwidth_per_client, 95)
     })
 
-    # CPU usage stats from cpu_logs
+    # CPU usage stats
     if not cpu_logs.empty:
         cpu_values = cpu_logs["cpu_percent"].dropna()
         summary_rows.append({
